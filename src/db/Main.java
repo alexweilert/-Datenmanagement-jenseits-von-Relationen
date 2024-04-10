@@ -2,10 +2,11 @@ package db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import db.ConnectDB;
 
 public class Main {
-    public static void main(String[] args) throws Exception{
+
+    
+    public static void main(String[] args){
         int num_tuples, num_attributes;
         double sparsity;
 
@@ -25,15 +26,25 @@ public class Main {
             Class.forName("org.postgresql.Driver");
             Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "alex");
             ConnectDB connectDB = new ConnectDB(connection);
-            if (connection != null) {
+            if (!connection.isClosed()) {
                 System.out.println("Connected");
+
                 connectDB.generate(num_tuples, sparsity, num_attributes);
                 connectDB.generateToyBsp(num_tuples);
+
+                System.out.println("Table and Views generated");
+
+                if (connectDB.closeConnection(connection))
+                    System.out.println("Connection Closed");
+                else{
+                    System.out.println("Still connected");
+                }
+
             } else {
-               System.out.println("Not Connected");
+               System.err.println("Connection not available");
             }
         } catch (Exception e) {
-            System.out.println(e);
+            System.err.println(e.getMessage());
         }
     }
 }

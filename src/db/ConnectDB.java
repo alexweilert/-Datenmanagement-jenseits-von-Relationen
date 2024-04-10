@@ -1,12 +1,10 @@
 package db;
 
-
-
-import java.lang.reflect.Constructor;
 import java.sql.*;
 
 public class ConnectDB {
     Connection connection;
+
     public ConnectDB(Connection connection){
             this.connection = connection;
     }
@@ -73,18 +71,27 @@ public class ConnectDB {
                 statement.executeUpdate("CREATE VIEW NUM_TUPLES AS SELECT count(*) FROM information_schema.columns WHERE table_name = 'h'");
 
                 // Create View for sparsity
-                String generateViewSpar = "CREATE VIEW SPARSITY AS SELECT ((ROUND(AVG(SPARSITY), 2)) + 1) AS CHECK_SPARSITY FROM ( ";
-                for(int i = 1; i < num_tuples; i++){
-                    if(i == 1){
-                        generateViewSpar += "\n SELECT (1.0 - COUNT(a" + i + "))/ COUNT(*) AS SPARSITY FROM h UNION ALL";
-                    } else {
-                        generateViewSpar += "\n SELECT (1.0 - COUNT(a" + i + "))/ COUNT(*) FROM h UNION ALL";
-                    }
-                }
-                generateViewSpar += "\n SELECT (1.0 - COUNT(a" + num_tuples + "))/ COUNT(*) FROM h ) AS SINGLE_SPARSITY";
-                statement.executeUpdate(generateViewSpar);
+                statement.executeUpdate(generateViewSpar(num_tuples));
 
             }
+    }
+
+    private static String generateViewSpar(int num_tuples) {
+        String generateViewSpar = "CREATE VIEW SPARSITY AS SELECT ((ROUND(AVG(SPARSITY), 2)) + 1) AS CHECK_SPARSITY FROM ( ";
+        for(int i = 1; i < num_tuples; i++){
+            if(i == 1){
+                generateViewSpar += "\n SELECT (1.0 - COUNT(a" + i + "))/ COUNT(*) AS SPARSITY FROM h UNION ALL";
+            } else {
+                generateViewSpar += "\n SELECT (1.0 - COUNT(a" + i + "))/ COUNT(*) FROM h UNION ALL";
+            }
+        }
+        generateViewSpar += "\n SELECT (1.0 - COUNT(a" + num_tuples + "))/ COUNT(*) FROM h ) AS SINGLE_SPARSITY";
+        return generateViewSpar;
+    }
+
+    public boolean closeConnection(Connection connection) throws SQLException {
+        connection.close();
+        return connection.isClosed();
     }
 
     public void generateToyBsp(int num_tuples) throws SQLException {
