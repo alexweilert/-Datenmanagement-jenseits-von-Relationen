@@ -31,6 +31,8 @@ public class Main {
 
                 connectDB.generate(num_tuples, sparsity, num_attributes);
                 connectDB.generateToyBsp(num_tuples);
+                connectDB.h2v();
+                connectDB.v2h();
 
                 System.out.println("Table and Views generated");
 
