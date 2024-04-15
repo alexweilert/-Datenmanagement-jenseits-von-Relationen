@@ -114,6 +114,7 @@ public class ConnectDB {
             // Create View for Rows
             statement.executeUpdate("CREATE VIEW NUM_TUPLES AS SELECT count(*) FROM information_schema.columns WHERE table_name = '" + create_table + "'");
 
+
             // Create View for sparsity
             statement.executeUpdate(generateViewSpar(num_tuples, create_table));
         }
@@ -123,12 +124,12 @@ public class ConnectDB {
         String generateViewSpar = "CREATE VIEW SPARSITY AS SELECT ((ROUND(AVG(SPARSITY), 2)) + 1) AS CHECK_SPARSITY FROM ( ";
         for (int i = 1; i < num_tuples; i++) {
             if (i == 1) {
-                generateViewSpar += "\n SELECT (1.0 - COUNT(a" + i + "))/ COUNT(*) AS SPARSITY FROM "+ create_table +" UNION ALL";
+                generateViewSpar += "\n SELECT (1.0 - COUNT(a" + i + "))/ COUNT(*) AS SPARSITY FROM " + create_table + " UNION ALL";
             } else {
-                generateViewSpar += "\n SELECT (1.0 - COUNT(a" + i + "))/ COUNT(*) FROM h UNION ALL";
+                generateViewSpar += "\n SELECT (1.0 - COUNT(a" + i + "))/ COUNT(*) FROM " + create_table + " UNION ALL";
             }
         }
-        generateViewSpar += "\n SELECT (1.0 - COUNT(a" + num_tuples + "))/ COUNT(*) FROM h ) AS SINGLE_SPARSITY";
+        generateViewSpar += "\n SELECT (1.0 - COUNT(a" + num_tuples + "))/ COUNT(*) FROM " + create_table + " ) AS SINGLE_SPARSITY";
         return generateViewSpar;
     }
 
