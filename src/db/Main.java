@@ -23,25 +23,25 @@ public class Main {
             sparsity = Double.parseDouble(args[1]);
             num_attributes = Integer.parseInt(args[2]);
         } try {
-            Class.forName("org.postgresql.Driver");
-            Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "alex");
-            ConnectDB connectDB = new ConnectDB(connection);
-            if (!connection.isClosed()) {
+            ConnectDB connectDB = new ConnectDB();
+
+            if (connectDB.openConnection()) {
                 System.out.println("Connected");
 
-                connectDB.generate(num_tuples, sparsity, num_attributes);
-                connectDB.generateToyBsp(num_tuples);
-                connectDB.h2v();
-                connectDB.v2h();
+                connectDB.generate(num_tuples, sparsity, num_attributes, "H");
 
-                System.out.println("Table and Views generated");
+                connectDB.generateToyBsp(num_tuples, "H");
+                connectDB.h2v("H", "V");
+                connectDB.v2h("V", "V2H");
 
-                if (connectDB.closeConnection(connection))
+
+
+                connectDB.closeConnection();
+                if (connectDB.isConnectionClosed())
                     System.out.println("Connection Closed");
                 else{
                     System.out.println("Still connected");
                 }
-
             } else {
                System.err.println("Connection not available");
             }

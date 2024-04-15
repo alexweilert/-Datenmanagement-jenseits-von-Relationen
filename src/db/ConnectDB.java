@@ -2,26 +2,39 @@ package db;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Optional;
 
 public class ConnectDB {
     Connection connection;
 
-
-    public ConnectDB(Connection connection) {
-        this.connection = connection;
+    public ConnectDB() throws SQLException, ClassNotFoundException {
     }
 
+    public boolean openConnection() throws SQLException, ClassNotFoundException {
+        Class.forName("org.postgresql.Driver");
+        this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "alex");
+        return !isConnectionClosed();
+    }
 
-    public void generate(int num_tuples, double sparsity, int num_attributes) throws SQLException {
+    public boolean isConnectionClosed() throws SQLException{
+        return this.connection.isClosed();
+    }
+
+    public void closeConnection() throws SQLException {
+        this.connection.close();
+
+    }
+
+    public void generate(int num_tuples, double sparsity, int num_attributes, String create_table) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             // Delete Tables and Views, if exists.
             statement.executeUpdate("DROP VIEW IF EXISTS NUM_ATTRIBUTES, NUM_TUPLES, SPARSITY, TOY_BSP_NOTNULL, TOY_BSP_NULL");
-            statement.execute("DROP TABLE IF EXISTS H, V, V2H");
+            statement.execute("DROP TABLE IF EXISTS H, V, V2H, " + create_table);
 
             // Create Table
-            statement.execute("CREATE TABLE H (\n oid INT PRIMARY KEY )");
+            statement.execute("CREATE TABLE " + create_table +" (\n oid INT PRIMARY KEY )");
             for (int i = 1; i <= num_tuples; i++) {
-                statement.execute("ALTER TABLE H ADD a" + i + " VARCHAR");
+                statement.execute("ALTER TABLE " + create_table + " ADD a" + i + " VARCHAR");
             }
             char alphabet = 'a';
             char alphabet2 = ' ';
@@ -30,7 +43,7 @@ public class ConnectDB {
             int counter_integer = 0;
             int counter_string = 0;
 
-            String insertQuery = "INSERT INTO H VALUES (";
+            String insertQuery = "INSERT INTO " + create_table + " VALUES (";
             for (int j = 1; j <= num_attributes; j++) {
                 insertQuery += "'" + j + "', ";
                 int string_int = 0;
@@ -96,22 +109,21 @@ public class ConnectDB {
             // Table created
 
             // Create View for Columns
-            statement.executeUpdate("CREATE VIEW NUM_ATTRIBUTES AS SELECT count(h) FROM H");
+            statement.executeUpdate("CREATE VIEW NUM_ATTRIBUTES AS SELECT count(*) FROM " + create_table);
 
             // Create View for Rows
-            statement.executeUpdate("CREATE VIEW NUM_TUPLES AS SELECT count(*) FROM information_schema.columns WHERE table_name = 'h'");
+            statement.executeUpdate("CREATE VIEW NUM_TUPLES AS SELECT count(*) FROM information_schema.columns WHERE table_name = '" + create_table + "'");
 
             // Create View for sparsity
-            statement.executeUpdate(generateViewSpar(num_tuples));
+            statement.executeUpdate(generateViewSpar(num_tuples, create_table));
         }
     }
 
-
-    private static String generateViewSpar(int num_tuples) {
+    private static String generateViewSpar(int num_tuples, String create_table) {
         String generateViewSpar = "CREATE VIEW SPARSITY AS SELECT ((ROUND(AVG(SPARSITY), 2)) + 1) AS CHECK_SPARSITY FROM ( ";
         for (int i = 1; i < num_tuples; i++) {
             if (i == 1) {
-                generateViewSpar += "\n SELECT (1.0 - COUNT(a" + i + "))/ COUNT(*) AS SPARSITY FROM h UNION ALL";
+                generateViewSpar += "\n SELECT (1.0 - COUNT(a" + i + "))/ COUNT(*) AS SPARSITY FROM "+ create_table +" UNION ALL";
             } else {
                 generateViewSpar += "\n SELECT (1.0 - COUNT(a" + i + "))/ COUNT(*) FROM h UNION ALL";
             }
@@ -120,24 +132,17 @@ public class ConnectDB {
         return generateViewSpar;
     }
 
-
-    public boolean closeConnection(Connection connection) throws SQLException {
-        connection.close();
-        return connection.isClosed();
-    }
-
-
-    public void generateToyBsp(int num_tuples) throws SQLException {
+    public void generateToyBsp(int num_tuples, String select_table) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             // Create Toy example out of table H
-            String generateViews = "CREATE VIEW TOY_BSP_NOTNULL AS SELECT * FROM H WHERE";
+            String generateViews = "CREATE VIEW TOY_BSP_NOTNULL AS SELECT * FROM " + select_table + " WHERE";
             for (int i = 1; i < num_tuples; i++) {
                 generateViews += " a" + i + " IS NOT NULL AND";
             }
             generateViews += " a" + num_tuples + " IS NOT NULL";
             statement.executeUpdate(generateViews);
 
-            generateViews = "CREATE VIEW TOY_BSP_NULL AS SELECT * FROM H WHERE";
+            generateViews = "CREATE VIEW TOY_BSP_NULL AS SELECT * FROM " + select_table + " WHERE";
             for (int i = 1; i < num_tuples; i++) {
                 generateViews += " a" + i + " IS NULL OR";
             }
@@ -146,15 +151,15 @@ public class ConnectDB {
         }
     }
 
-    public void h2v() throws SQLException {
+    public void h2v(String select_table_name, String create_table) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
-            statement.execute("DROP TABLE IF EXISTS V");
-            statement.execute("CREATE TABLE V (\n oid varchar, key varchar, val varchar)");
+            statement.execute("DROP TABLE IF EXISTS V, " + create_table);
+            statement.execute("CREATE TABLE " + create_table + " (\n oid varchar, key varchar, val varchar)");
 
-            ResultSet rs = statement.executeQuery("SELECT * FROM toy_bsp_null");
+            ResultSet rs = statement.executeQuery("SELECT * FROM " + select_table_name);
             ResultSetMetaData rsmd = rs.getMetaData();
 
-            String sql = "INSERT INTO V (oid, key, val) VALUES ";
+            String sql = "INSERT INTO " + create_table + " (oid, key, val) VALUES ";
             String id = "";
             while (rs.next()) {
                 int count = 1;
@@ -180,14 +185,14 @@ public class ConnectDB {
         }
     }
 
-    public void v2h() throws SQLException {
+    public void v2h(String select_table, String create_table) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
-            statement.execute("DROP TABLE IF EXISTS V2H");
+            statement.execute("DROP TABLE IF EXISTS V2H, " + create_table);
 
-            ResultSet rs = statement.executeQuery("SELECT * FROM V");
+            ResultSet rs = statement.executeQuery("SELECT * FROM " + select_table);
             ResultSetMetaData rsmd = rs.getMetaData();
             // Create Table V2H
-            String sql = "CREATE TABLE V2H ( \n oid VARCHAR, ";
+            String sql = "CREATE TABLE " + create_table + " ( \n oid VARCHAR, ";
             String attr = "";
             ArrayList<String> keys = new ArrayList<>();
 
@@ -211,9 +216,9 @@ public class ConnectDB {
 
 
             attr = attr.substring(0, attr.length() - 2);
-            sql = "INSERT INTO V2H ( oid, " + attr + " ) VALUES ";
+            sql = "INSERT INTO " + create_table + " ( oid, " + attr + " ) VALUES ";
 
-            rs = statement.executeQuery("SELECT * FROM V");
+            rs = statement.executeQuery("SELECT * FROM " + select_table);
 
             String oid = "";
             String old_oid = "";
