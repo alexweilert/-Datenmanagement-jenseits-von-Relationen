@@ -60,37 +60,42 @@ public class Main {
         System.out.println("Phase 2: Benchmarks enrolling");
 
         System.out.println("Phase 2: Extending num_attributes");
-
+        long startTime = System.nanoTime();
         System.out.println("1. num_tuples = 5, sparsity = 0.5, num_attributes = 1000");
         benchmark(connectDB, 5, 0.5, 1000, "att1000", "att1000_to_vertical", "att1000_to_horizontal");
-        System.out.println("2. num_tuples = 5, sparsity = 0.5, num_attributes = 10000");
+        System.out.println("2. num_tuples = 5, sparsity = 0.5, num_attributes = 5000");
+        benchmark(connectDB, 5, 0.5, 5000, "att5000", "att5000_to_vertical", "att5000_to_horizontal");
+        System.out.println("3. num_tuples = 5, sparsity = 0.5, num_attributes = 10000");
         benchmark(connectDB, 5, 0.5, 10000, "att10000", "att10000_to_vertical", "att10000_to_horizontal");
-        System.out.println("3. num_tuples = 5, sparsity = 0.5, num_attributes = 100000");
-        benchmark(connectDB, 5, 0.5, 100000, "att100000", "att100000_to_vertical", "att100000_to_horizontal");
-        System.out.println("4. num_tuples = 5, sparsity = 0.5, num_attributes = 1000000");
-        benchmark(connectDB, 5, 0.5, 1000000, "att1000000", "att1000000_to_vertical", "att1000000_to_horizontal");
+        System.out.println("4. num_tuples = 5, sparsity = 0.5, num_attributes = 25000");
+        benchmark(connectDB, 5, 0.5, 25000, "att25000", "att25000_to_vertical", "att25000_to_horizontal");
+        System.out.println("5. num_tuples = 5, sparsity = 0.5, num_attributes = 50000");
+        benchmark(connectDB, 5, 0.5, 50000, "att50000", "att50000_to_vertical", "att50000_to_horizontal");
 
 
         System.out.println("Phase 2: Extending num_tuples");
-        System.out.println("1 num_tuples = 5, sparsity = 0.5, num_attributes = 1000");
+        System.out.println("1. num_tuples = 5, sparsity = 0.5, num_attributes = 1000");
         benchmark(connectDB, 5, 0.5, 1000, "tup5", "tup5_to_vertical", "tup5_to_horizontal");
-        System.out.println("2 num_tuples = 50, sparsity = 0.5, num_attributes = 1000");
+        System.out.println("2. num_tuples = 50, sparsity = 0.5, num_attributes = 1000");
         benchmark(connectDB, 50, 0.5, 1000, "tup50", "tup50_to_vertical", "tup50_to_horizontal");
-        System.out.println("3 num_tuples = 500, sparsity = 0.5, num_attributes = 1000");
+        System.out.println("3. num_tuples = 100, sparsity = 0.5, num_attributes = 1000");
+        benchmark(connectDB, 100, 0.5, 1000, "tup100", "tup100_to_vertical", "tup100_to_horizontal");
+        System.out.println("4. num_tuples = 2500, sparsity = 0.5, num_attributes = 1000");
+        benchmark(connectDB, 250, 0.5, 1000, "tup250", "tup250_to_vertical", "tup250_to_horizontal");
+        System.out.println("5. num_tuples = 5000, sparsity = 0.5, num_attributes = 1000");
         benchmark(connectDB, 500, 0.5, 1000, "tup500", "tup500_to_vertical", "tup500_to_horizontal");
-        System.out.println("4 num_tuples = 5000, sparsity = 0.5, num_attributes = 1000");
-        benchmark(connectDB, 5000, 0.5, 1000, "tup5000", "tup5000_to_vertical", "tup5000_to_horizontal");
 
 
         System.out.println("Phase 2: Extending sparsity");
-        System.out.println("1: num_tuples = 5, sparsity = 0.5, num_attributes = 1000");
+        System.out.println("1. num_tuples = 5, sparsity = 0.5, num_attributes = 1000");
         benchmark(connectDB, 5, 0.5, 1000, "spar05", "spar05_to_vertical", "spar05_to_horizontal");
-        System.out.println("2: num_tuples = 5, sparsity = 0.25, num_attributes = 1000");
+        System.out.println("2. num_tuples = 5, sparsity = 0.25, num_attributes = 1000");
         benchmark(connectDB, 5, 0.25, 1000, "spar025", "spar025_to_vertical", "spar025_to_horizontal");
-        System.out.println("3: num_tuples = 5, sparsity = 0.75, num_attributes = 1000");
+        System.out.println("3. num_tuples = 5, sparsity = 0.75, num_attributes = 1000");
         benchmark(connectDB, 5, 0.75, 1000, "spar075", "spar075_to_vertical", "spar075_to_horizontal");
-        System.out.println("3: num_tuples = 5, sparsity = 1, num_attributes = 1000");
+        System.out.println("3. num_tuples = 5, sparsity = 1, num_attributes = 1000");
         benchmark(connectDB, 5, 1, 1000, "spar1", "spar1_to_vertical", "spar1_to_horizontal");
+        System.out.println("Benchmark finished with a duration of: " + (System.nanoTime() - startTime) / 1000000);
         System.out.println("Phase 2: Finished");
     }
 
