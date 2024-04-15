@@ -182,7 +182,6 @@ public class ConnectDB {
         }
     }
 
-
     public void v2h() throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute("DROP TABLE IF EXISTS V2H");
@@ -191,6 +190,7 @@ public class ConnectDB {
             ResultSetMetaData rsmd = rs.getMetaData();
 
             String sql = "CREATE TABLE V2H ( \n oid VARCHAR, ";
+            String attr = "";
             ArrayList<String> keys = new ArrayList<>();
 
             while (rs.next()) {
@@ -200,18 +200,23 @@ public class ConnectDB {
                     }
                 }
             }
+
             keys.sort((o1, o2) -> o1.compareTo(o2));
             for( int i = 0; i < keys.size(); i++ ) {
                 sql +=  keys.get(i) + " VARCHAR, ";
+                attr += keys.get(i) + ", ";
             }
             sql = sql.substring(0, sql.length() - 2);
             sql += ")";
             statement.executeUpdate(sql);
 
+            attr = attr.substring(0, attr.length() - 2);
+            sql = "INSERT INTO V2H VALUES( oid, " + attr + " )";
             rs = statement.executeQuery("SELECT * FROM H2V");
-            rsmd = rs.getMetaData();
             while(rs.next()){
-
+                for(int i = 1; i <= rsmd.getColumnCount(); i++) {
+                    System.out.println(rsmd.getColumnName(i) + " " + rs.getString(i));
+                }
             }
         }
     }
