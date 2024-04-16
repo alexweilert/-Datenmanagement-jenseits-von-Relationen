@@ -43,9 +43,9 @@ public class ConnectDB {
             int counter_integer = 0;
             int counter_string = 0;
 
-            String insertQuery = "INSERT INTO " + create_table + " VALUES (";
+            StringBuilder insertQuery = new StringBuilder("INSERT INTO " + create_table + " VALUES (");
             for (int j = 1; j <= num_attributes; j++) {
-                insertQuery += "'" + j + "', ";
+                insertQuery.append("'").append(j).append("', ");
                 int string_int = 0;
                 for (int i = 1; i <= num_tuples; i++) {
                     String value;
@@ -73,17 +73,17 @@ public class ConnectDB {
 
                     string_int++;
                     if (!value.equals("NULL")) {
-                        insertQuery += "'" + value + "', ";
+                        insertQuery.append("'").append(value).append("', ");
                     } else {
-                        insertQuery += value + ", ";
+                        insertQuery.append(value).append(", ");
                     }
                 }
-                insertQuery = insertQuery.substring(0, insertQuery.length() - 2);
-                insertQuery += "), (";
+                insertQuery = new StringBuilder(insertQuery.substring(0, insertQuery.length() - 2));
+                insertQuery.append("), (");
 
             }
-            insertQuery = insertQuery.substring(0, insertQuery.length() - 3);
-            statement.executeUpdate(insertQuery);
+            insertQuery = new StringBuilder(insertQuery.substring(0, insertQuery.length() - 3));
+            statement.executeUpdate(insertQuery.toString());
             // Table created
 
             // Create View for Columns
@@ -99,34 +99,34 @@ public class ConnectDB {
     }
 
     private static String generateViewSpar(int num_tuples, String create_table) {
-        String generateViewSpar = "CREATE VIEW SPARSITY AS SELECT ((ROUND(AVG(SPARSITY), 2)) + 1) AS CHECK_SPARSITY FROM ( ";
+        StringBuilder generateViewSpar = new StringBuilder("CREATE VIEW SPARSITY AS SELECT ((ROUND(AVG(SPARSITY), 2)) + 1) AS CHECK_SPARSITY FROM ( ");
         for (int i = 1; i < num_tuples; i++) {
             if (i == 1) {
-                generateViewSpar += "\n SELECT (1.0 - COUNT(a" + i + "))/ COUNT(*) AS SPARSITY FROM " + create_table + " UNION ALL";
+                generateViewSpar.append("\n SELECT (1.0 - COUNT(a").append(i).append("))/ COUNT(*) AS SPARSITY FROM ").append(create_table).append(" UNION ALL");
             } else {
-                generateViewSpar += "\n SELECT (1.0 - COUNT(a" + i + "))/ COUNT(*) FROM " + create_table + " UNION ALL";
+                generateViewSpar.append("\n SELECT (1.0 - COUNT(a").append(i).append("))/ COUNT(*) FROM ").append(create_table).append(" UNION ALL");
             }
         }
-        generateViewSpar += "\n SELECT (1.0 - COUNT(a" + num_tuples + "))/ COUNT(*) FROM " + create_table + " ) AS SINGLE_SPARSITY";
-        return generateViewSpar;
+        generateViewSpar.append("\n SELECT (1.0 - COUNT(a").append(num_tuples).append("))/ COUNT(*) FROM ").append(create_table).append(" ) AS SINGLE_SPARSITY");
+        return generateViewSpar.toString();
     }
 
     public void generateToyBsp(int num_tuples, String select_table) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             // Create Toy example out of table H
-            String generateViews = "CREATE VIEW TOY_BSP_NOTNULL AS SELECT * FROM " + select_table + " WHERE";
+            StringBuilder generateViews = new StringBuilder("CREATE VIEW TOY_BSP_NOTNULL AS SELECT * FROM " + select_table + " WHERE");
             for (int i = 1; i < num_tuples; i++) {
-                generateViews += " a" + i + " IS NOT NULL AND";
+                generateViews.append(" a").append(i).append(" IS NOT NULL AND");
             }
-            generateViews += " a" + num_tuples + " IS NOT NULL";
-            statement.executeUpdate(generateViews);
+            generateViews.append(" a").append(num_tuples).append(" IS NOT NULL");
+            statement.executeUpdate(generateViews.toString());
 
-            generateViews = "CREATE VIEW TOY_BSP_NULL AS SELECT * FROM " + select_table + " WHERE";
+            generateViews = new StringBuilder("CREATE VIEW TOY_BSP_NULL AS SELECT * FROM " + select_table + " WHERE");
             for (int i = 1; i < num_tuples; i++) {
-                generateViews += " a" + i + " IS NULL OR";
+                generateViews.append(" a").append(i).append(" IS NULL OR");
             }
-            generateViews += " a" + num_tuples + " IS NULL";
-            statement.executeUpdate(generateViews);
+            generateViews.append(" a").append(num_tuples).append(" IS NULL");
+            statement.executeUpdate(generateViews.toString());
         }
     }
 
@@ -144,7 +144,7 @@ public class ConnectDB {
             ResultSet rs = statement.executeQuery("SELECT * FROM " + select_table_name);
             ResultSetMetaData rsmd = rs.getMetaData();
 
-            String sql = "INSERT INTO " + create_table + " (oid, key, val) VALUES ";
+            StringBuilder sql = new StringBuilder("INSERT INTO " + create_table + " (oid, key, val) VALUES ");
             String id = "";
             while (rs.next()) {
                 int count = 1;
@@ -156,17 +156,17 @@ public class ConnectDB {
                             count++;
                             if (rsmd.getColumnCount() == count) {
                                 for (int j = 2; j <= rsmd.getColumnCount(); j++) {
-                                    sql += "( '" + id + "', '" + rsmd.getColumnName(j) + "', " + rs.getString(j) + " ), ";
+                                    sql.append("( '").append(id).append("', '").append(rsmd.getColumnName(j)).append("', ").append(rs.getString(j)).append(" ), ");
                                 }
                             }
                         } else {
-                            sql += "('" + id + "', '" + rsmd.getColumnName(i) + "', '" + rs.getString(i) + "'), ";
+                            sql.append("('").append(id).append("', '").append(rsmd.getColumnName(i)).append("', '").append(rs.getString(i)).append("'), ");
                         }
                     }
                 }
             }
-            sql = sql.substring(0, sql.length() - 2);
-            statement.executeUpdate(sql);
+            sql = new StringBuilder(sql.substring(0, sql.length() - 2));
+            statement.executeUpdate(sql.toString());
         }
     }
 
@@ -178,8 +178,8 @@ public class ConnectDB {
             ResultSetMetaData rsmd = rs.getMetaData();
 
             // Create Table V2H
-            String sql = "CREATE TABLE " + create_table + " ( \n oid VARCHAR, ";
-            String attr = "";
+            StringBuilder sql = new StringBuilder("CREATE TABLE " + create_table + " ( \n oid VARCHAR, ");
+            StringBuilder attr = new StringBuilder();
             ArrayList<String> keys = new ArrayList<>();
 
             while (rs.next()) {
@@ -192,19 +192,19 @@ public class ConnectDB {
 
             keys.sort((o1, o2) -> o1.compareTo(o2));
             for (int i = 0; i < keys.size(); i++) {
-                sql += keys.get(i) + " VARCHAR, ";
-                attr += keys.get(i) + ", ";
+                sql.append(keys.get(i)).append(" VARCHAR, ");
+                attr.append(keys.get(i)).append(", ");
             }
-            sql = sql.substring(0, sql.length() - 2);
-            sql += ")";
+            sql = new StringBuilder(sql.substring(0, sql.length() - 2));
+            sql.append(")");
             // Generate Table V2H out of String.
-            statement.executeUpdate(sql);
+            statement.executeUpdate(sql.toString());
 
             statement.execute("DROP INDEX IF EXISTS idx_key_" + create_table);
             statement.execute("CREATE INDEX idx_key_" + create_table + " ON " + create_table + " (oid)");
 
-            attr = attr.substring(0, attr.length() - 2);
-            sql = "INSERT INTO " + create_table + " ( oid, " + attr + " ) VALUES ";
+            attr = new StringBuilder(attr.substring(0, attr.length() - 2));
+            sql = new StringBuilder("INSERT INTO " + create_table + " ( oid, " + attr + " ) VALUES ");
 
             rs = statement.executeQuery("SELECT * FROM " + select_table);
 
@@ -214,6 +214,7 @@ public class ConnectDB {
             int key_index = 0;
             int counter = 0;
             String val = "";
+
             while (rs.next()) {
                 for (int i = 1; i <= rsmd.getColumnCount(); i++) {
                     if (rsmd.getColumnName(i).equals("oid")) {
@@ -228,51 +229,51 @@ public class ConnectDB {
                 if (oid.equals(old_oid)) {
                     if (counter < key_index - 1) {
                         while (counter < key_index - 1) {
-                            sql += ", NULL";
+                            sql.append(", NULL");
                             counter++;
                         }
                     }
                     if (val != null) {
-                        sql += ", '" + val + "'";
+                        sql.append(", '").append(val).append("'");
                     } else {
-                        sql += ", NULL";
+                        sql.append(", NULL");
                     }
                     counter++;
                 } else {
                     if (counter >= keys.size()) {
-                        sql += " ), ";
+                        sql.append(" ), ");
                         counter = 0;
                     } else if (!old_oid.isEmpty()) {
                         for (int j = counter; j < keys.size(); j++) {
-                            sql += ", NULL";
+                            sql.append(", NULL");
                             counter++;
                         }
-                        sql += " ), ";
+                        sql.append(" ), ");
                         counter = 0;
                     }
 
-                    sql += "( " + oid;
+                    sql.append("( ").append(oid);
                     old_oid = oid;
                     if (counter < key_index) {
                         for (int i = 1; i < key_index; i++) {
-                            sql += ", NULL";
+                            sql.append(", NULL");
                             counter++;
                         }
                     }
                     if (val != null) {
-                        sql += ", '" + val + "'";
+                        sql.append(", '").append(val).append("'");
                     } else {
-                        sql += ", NULL";
+                        sql.append(", NULL");
                     }
                     counter++;
                 }
             }
             while (counter < keys.size()) {
-                sql += ", NULL";
+                sql.append(", NULL");
                 counter++;
             }
-            sql += " )";
-            statement.execute(sql);
+            sql.append(" )");
+            statement.execute(sql.toString());
         }
     }
 
