@@ -132,19 +132,14 @@ public class ConnectDB {
 
     public void h2v(String select_table_name, String create_table) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
-            statement.execute("DROP MATERIALIZED VIEW IF EXISTS mv_v");
+            statement.execute("DROP MATERIALIZED VIEW IF EXISTS mv_"+create_table);
             statement.execute("DROP TABLE IF EXISTS " + create_table);
             statement.execute("CREATE TABLE " + create_table + " (\n oid varchar, key varchar, val varchar)");
 
-            statement.execute("DROP INDEX IF EXISTS idx_key");
-            statement.execute("CREATE INDEX idx_key ON V (oid)");
-            //System.out.println( statement.execute("CREATE INDEX idx_key ON V (oid)"));
+            statement.execute("DROP INDEX IF EXISTS idx_key_" + create_table);
+            statement.execute("CREATE INDEX idx_key_" + create_table + " ON " + create_table + " (oid)");
 
-
-            String materi = "CREATE MATERIALIZED VIEW mv_v AS SELECT * FROM V WHERE key = 'a1'";
-            statement.execute(materi);
-            System.out.println(materi);
-            // System.out.println( statement.execute("CREATE MATERIALIZED VIEW mv_v AS SELECT * FROM V WHERE key = 'a1'"));
+            statement.execute("CREATE MATERIALIZED VIEW mv_" + create_table + " AS SELECT * FROM " + create_table + " WHERE key = 'a1'");
 
             ResultSet rs = statement.executeQuery("SELECT * FROM " + select_table_name);
             ResultSetMetaData rsmd = rs.getMetaData();
@@ -181,6 +176,7 @@ public class ConnectDB {
 
             ResultSet rs = statement.executeQuery("SELECT * FROM " + select_table);
             ResultSetMetaData rsmd = rs.getMetaData();
+
             // Create Table V2H
             String sql = "CREATE TABLE " + create_table + " ( \n oid VARCHAR, ";
             String attr = "";
@@ -204,6 +200,8 @@ public class ConnectDB {
             // Generate Table V2H out of String.
             statement.executeUpdate(sql);
 
+            statement.execute("DROP INDEX IF EXISTS idx_key_" + create_table);
+            statement.execute("CREATE INDEX idx_key_" + create_table + " ON " + create_table + " (oid)");
 
             attr = attr.substring(0, attr.length() - 2);
             sql = "INSERT INTO " + create_table + " ( oid, " + attr + " ) VALUES ";
@@ -288,7 +286,7 @@ public class ConnectDB {
 
             ResultSet rs = statement.executeQuery(sql);
 
-            if (rs.next()) {
+            while (rs.next()) {
                 String totalSize = rs.getString("total_size");
                 String indexesSize = rs.getString("indexes_size");
                 System.out.println("Total Size of " + tableName + ": " + totalSize);

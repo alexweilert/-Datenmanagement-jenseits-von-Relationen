@@ -62,7 +62,7 @@ public class Main {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         System.out.println("Phase 2: Extending num_attributes");
-        int[] numAttributesValues = {5, 50, 100, 250, 500};
+        int[] numAttributesValues = {1000, 5000, 10000, 25000, 50000};
 
         for (int num_attributes : numAttributesValues) {
             benchmark(connectDB, 5, 0.5, num_attributes, "att" + num_attributes, "att" + num_attributes + "_to_vertical", "att" + num_attributes + "_to_horizontal");
