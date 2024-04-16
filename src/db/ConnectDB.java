@@ -2,7 +2,6 @@ package db;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Optional;
 
 public class ConnectDB {
     Connection connection;
@@ -12,11 +11,11 @@ public class ConnectDB {
 
     public boolean openConnection() throws SQLException, ClassNotFoundException {
         Class.forName("org.postgresql.Driver");
-        this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "alex");
+        this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "dragi");
         return !isConnectionClosed();
     }
 
-    public boolean isConnectionClosed() throws SQLException{
+    public boolean isConnectionClosed() throws SQLException {
         return this.connection.isClosed();
     }
 
@@ -28,17 +27,18 @@ public class ConnectDB {
     public void generate(int num_tuples, double sparsity, int num_attributes, String create_table) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             // Delete Tables and Views, if exists.
-            statement.executeUpdate("DROP VIEW IF EXISTS NUM_ATTRIBUTES, NUM_TUPLES, SPARSITY, TOY_BSP_NOTNULL, TOY_BSP_NULL");
-            statement.execute("DROP TABLE IF EXISTS H, V, V2H, " + create_table);
+            if(create_table.equals("h")){
+                statement.executeUpdate("DROP VIEW IF EXISTS TOY_BSP_NOTNULL, TOY_BSP_NULL");
+            }
+            statement.executeUpdate("DROP VIEW IF EXISTS NUM_ATTRIBUTES, NUM_TUPLES, SPARSITY");
+            statement.execute("DROP TABLE IF EXISTS " + create_table);
 
             // Create Table
-            statement.execute("CREATE TABLE " + create_table +" (\n oid INT PRIMARY KEY )");
+            statement.execute("CREATE TABLE " + create_table + " (\n oid INT PRIMARY KEY )");
             for (int i = 1; i <= num_tuples; i++) {
                 statement.execute("ALTER TABLE " + create_table + " ADD a" + i + " VARCHAR");
             }
             char alphabet = 'a';
-            char alphabet2 = ' ';
-            char alphabet3 = ' ';
             int number = 1;
             int counter_integer = 0;
             int counter_string = 0;
@@ -57,28 +57,7 @@ public class ConnectDB {
                                 counter_string = 0;
                                 alphabet++;
                             }
-                            if (alphabet == '{' && alphabet2 == 'z' && alphabet3 == ' ') {
-                                alphabet3 = 'a';
-                                alphabet2 = 'a';
-                                alphabet = 'a';
-                            } else if (alphabet == '{' && alphabet2 == ' ') {
-                                alphabet2 = 'a';
-                                alphabet = 'a';
-                            } else if (alphabet == '{' && alphabet2 == 'z' && alphabet3 >= 'a') {
-                                alphabet3++;
-                                alphabet2 = 'a';
-                                alphabet = 'a';
-                            } else if (alphabet == '{' && alphabet2 <= 'z') {
-                                alphabet2++;
-                                alphabet = 'a';
-                            }
-
-                            if (alphabet3 != ' ')
-                                value = String.valueOf(alphabet3) + String.valueOf(alphabet2) + String.valueOf(alphabet);
-                            else if (alphabet2 != ' ')
-                                value = String.valueOf(alphabet2) + String.valueOf(alphabet);
-                            else
-                                value = String.valueOf(alphabet);
+                            value = String.valueOf(alphabet);
                             counter_string++;
 
                         } else {
@@ -89,7 +68,6 @@ public class ConnectDB {
                                 counter_integer = 0;
                                 number++;
                             }
-
                         }
                     }
 
@@ -154,8 +132,19 @@ public class ConnectDB {
 
     public void h2v(String select_table_name, String create_table) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
-            statement.execute("DROP TABLE IF EXISTS V, " + create_table);
+            statement.execute("DROP MATERIALIZED VIEW IF EXISTS mv_v");
+            statement.execute("DROP TABLE IF EXISTS " + create_table);
             statement.execute("CREATE TABLE " + create_table + " (\n oid varchar, key varchar, val varchar)");
+
+            statement.execute("DROP INDEX IF EXISTS idx_key");
+            statement.execute("CREATE INDEX idx_key ON V (oid)");
+            //System.out.println( statement.execute("CREATE INDEX idx_key ON V (oid)"));
+
+
+            String materi = "CREATE MATERIALIZED VIEW mv_v AS SELECT * FROM V WHERE key = 'a1'";
+            statement.execute(materi);
+            System.out.println(materi);
+            // System.out.println( statement.execute("CREATE MATERIALIZED VIEW mv_v AS SELECT * FROM V WHERE key = 'a1'"));
 
             ResultSet rs = statement.executeQuery("SELECT * FROM " + select_table_name);
             ResultSetMetaData rsmd = rs.getMetaData();
@@ -188,7 +177,7 @@ public class ConnectDB {
 
     public void v2h(String select_table, String create_table) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
-            statement.execute("DROP TABLE IF EXISTS V2H, " + create_table);
+            statement.execute("DROP TABLE IF EXISTS " + create_table);
 
             ResultSet rs = statement.executeQuery("SELECT * FROM " + select_table);
             ResultSetMetaData rsmd = rs.getMetaData();
@@ -239,8 +228,8 @@ public class ConnectDB {
                     }
                 }
                 if (oid.equals(old_oid)) {
-                    if(counter < key_index-1) {
-                        while (counter < key_index-1) {
+                    if (counter < key_index - 1) {
+                        while (counter < key_index - 1) {
                             sql += ", NULL";
                             counter++;
                         }
@@ -266,7 +255,7 @@ public class ConnectDB {
 
                     sql += "( " + oid;
                     old_oid = oid;
-                    if(counter < key_index) {
+                    if (counter < key_index) {
                         for (int i = 1; i < key_index; i++) {
                             sql += ", NULL";
                             counter++;
@@ -289,5 +278,28 @@ public class ConnectDB {
         }
     }
 
+    public void printStorageSize(String tableName) {
+        try (Statement statement = this.connection.createStatement()) {
+            String sql = "SELECT " +
+                    "pg_size_pretty(pg_total_relation_size('\"' || table_schema || '\".\"' || table_name || '\"')) AS total_size, " +
+                    "pg_size_pretty(pg_indexes_size('\"' || table_schema || '\".\"' || table_name || '\"')) AS indexes_size " +
+                    "FROM information_schema.tables " +
+                    "WHERE table_name = '" + tableName + "';";
+
+            ResultSet rs = statement.executeQuery(sql);
+
+            if (rs.next()) {
+                String totalSize = rs.getString("total_size");
+                String indexesSize = rs.getString("indexes_size");
+                System.out.println("Total Size of " + tableName + ": " + totalSize);
+                System.out.println("Indexes Size of " + tableName + ": " + indexesSize);
+            }
+
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error while calculating storage size of " + tableName);
+        }
+    }
 
 }
