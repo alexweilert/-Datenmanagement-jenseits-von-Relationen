@@ -6,12 +6,12 @@ import java.util.ArrayList;
 public class ConnectDB {
     Connection connection;
 
-    public ConnectDB() throws SQLException, ClassNotFoundException {
+    public ConnectDB() {
     }
 
     public boolean openConnection() throws SQLException, ClassNotFoundException {
         Class.forName("org.postgresql.Driver");
-        this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "dragi");
+        this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "alex");
         return !isConnectionClosed();
     }
 
@@ -21,10 +21,9 @@ public class ConnectDB {
 
     public void closeConnection() throws SQLException {
         this.connection.close();
-
     }
 
-    public void generate(int num_tuples, double sparsity, int num_attributes, String create_table) throws SQLException {
+    public void generate(int num_tuples, double sparsity, int num_attributes, String create_table, long time) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             // Delete Tables and Views, if exists.
             if(create_table.equals("h")){
@@ -33,6 +32,10 @@ public class ConnectDB {
             statement.executeUpdate("DROP VIEW IF EXISTS NUM_ATTRIBUTES, NUM_TUPLES, SPARSITY");
             statement.execute("DROP TABLE IF EXISTS " + create_table);
 
+            long start_time = System.currentTimeMillis();
+            long max_time = System.currentTimeMillis() + (time * 1000);
+            long counter_querry = 0;
+            boolean time_over = false;
             // Create Table
             statement.execute("CREATE TABLE " + create_table + " (\n oid INT PRIMARY KEY )");
             for (int i = 1; i <= num_tuples; i++) {
@@ -45,9 +48,17 @@ public class ConnectDB {
 
             StringBuilder insertQuery = new StringBuilder("INSERT INTO " + create_table + " VALUES (");
             for (int j = 1; j <= num_attributes; j++) {
+                if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
+                    time_over = true;
+                    System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
+                }
                 insertQuery.append("'").append(j).append("', ");
                 int string_int = 0;
                 for (int i = 1; i <= num_tuples; i++) {
+                    if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
+                        time_over = true;
+                        System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
+                    }
                     String value;
                     if (Math.random() < sparsity) {
                         value = "NULL";
@@ -80,10 +91,17 @@ public class ConnectDB {
                 }
                 insertQuery = new StringBuilder(insertQuery.substring(0, insertQuery.length() - 2));
                 insertQuery.append("), (");
-
+                counter_querry++;
+                if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
+                    time_over = true;
+                    System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
+                }
             }
             insertQuery = new StringBuilder(insertQuery.substring(0, insertQuery.length() - 3));
             statement.executeUpdate(insertQuery.toString());
+            if (!time_over) {
+                System.out.println(((System.currentTimeMillis() - start_time)/1000) + " seconds with a total of " + counter_querry + " querryies");
+            }
             // Table created
 
             // Create View for Columns
@@ -93,7 +111,7 @@ public class ConnectDB {
             statement.executeUpdate("CREATE VIEW NUM_TUPLES AS SELECT count(*) FROM information_schema.columns WHERE table_name = '" + create_table + "'");
 
 
-            // Create View for sparsity
+            // Create Views for sparsity
             statement.executeUpdate(generateViewSpar(num_tuples, create_table));
         }
     }
@@ -130,25 +148,32 @@ public class ConnectDB {
         }
     }
 
-    public void h2v(String select_table_name, String create_table) throws SQLException {
+    public void h2v(String select_table_name, String create_table, long time) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute("DROP MATERIALIZED VIEW IF EXISTS mv_"+create_table);
             statement.execute("DROP TABLE IF EXISTS " + create_table);
             statement.execute("CREATE TABLE " + create_table + " (\n oid varchar, key varchar, val varchar)");
 
             statement.execute("DROP INDEX IF EXISTS idx_key_" + create_table);
+            long start_time = System.currentTimeMillis();
+            long max_time = System.currentTimeMillis() + (time * 1000);
+            long counter_querry = 0;
+            boolean time_over = false;
+
             statement.execute("CREATE INDEX idx_key_" + create_table + " ON " + create_table + " (oid)");
 
             statement.execute("CREATE MATERIALIZED VIEW mv_" + create_table + " AS SELECT * FROM " + create_table + " WHERE key = 'a1'");
-
             ResultSet rs = statement.executeQuery("SELECT * FROM " + select_table_name);
             ResultSetMetaData rsmd = rs.getMetaData();
-
             StringBuilder sql = new StringBuilder("INSERT INTO " + create_table + " (oid, key, val) VALUES ");
             String id = "";
             while (rs.next()) {
                 int count = 1;
                 for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+                    if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
+                        time_over = true;
+                        System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
+                    }
                     if (rsmd.getColumnName(i).equals("oid")) {
                         id = rs.getString(i);
                     } else {
@@ -157,20 +182,33 @@ public class ConnectDB {
                             if (rsmd.getColumnCount() == count) {
                                 for (int j = 2; j <= rsmd.getColumnCount(); j++) {
                                     sql.append("( '").append(id).append("', '").append(rsmd.getColumnName(j)).append("', ").append(rs.getString(j)).append(" ), ");
+                                    counter_querry++;
+                                    if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
+                                        time_over = true;
+                                        System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
+                                    }
                                 }
                             }
                         } else {
                             sql.append("('").append(id).append("', '").append(rsmd.getColumnName(i)).append("', '").append(rs.getString(i)).append("'), ");
+                            counter_querry++;
+                            if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
+                                time_over = true;
+                                System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
+                            }
                         }
                     }
                 }
             }
             sql = new StringBuilder(sql.substring(0, sql.length() - 2));
             statement.executeUpdate(sql.toString());
+            if (!time_over) {
+                System.out.println(((System.currentTimeMillis() - start_time)/1000) + " seconds with a total of " + counter_querry + " querryies");
+            }
         }
     }
 
-    public void v2h(String select_table, String create_table) throws SQLException {
+    public void v2h(String select_table, String create_table, long time) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute("DROP TABLE IF EXISTS " + create_table);
 
@@ -201,6 +239,12 @@ public class ConnectDB {
             statement.executeUpdate(sql.toString());
 
             statement.execute("DROP INDEX IF EXISTS idx_key_" + create_table);
+
+            long start_time = System.currentTimeMillis();
+            long max_time = System.currentTimeMillis() + (time * 1000);
+            long counter_querry = 0;
+            boolean time_over = false;
+
             statement.execute("CREATE INDEX idx_key_" + create_table + " ON " + create_table + " (oid)");
 
             attr = new StringBuilder(attr.substring(0, attr.length() - 2));
@@ -217,6 +261,10 @@ public class ConnectDB {
 
             while (rs.next()) {
                 for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+                    if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
+                        time_over = true;
+                        System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
+                    }
                     if (rsmd.getColumnName(i).equals("oid")) {
                         oid = rs.getString(i);
                     } else if (rsmd.getColumnName(i).equals("key")) {
@@ -243,13 +291,27 @@ public class ConnectDB {
                     if (counter >= keys.size()) {
                         sql.append(" ), ");
                         counter = 0;
+                        counter_querry++;
+                        if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
+                            time_over = true;
+                            System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
+                        }
                     } else if (!old_oid.isEmpty()) {
                         for (int j = counter; j < keys.size(); j++) {
+                            if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
+                                time_over = true;
+                                System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
+                            }
                             sql.append(", NULL");
                             counter++;
                         }
                         sql.append(" ), ");
+                        if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
+                            time_over = true;
+                            System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
+                        }
                         counter = 0;
+                        counter_querry++;
                     }
 
                     sql.append("( ").append(oid);
@@ -274,6 +336,10 @@ public class ConnectDB {
             }
             sql.append(" )");
             statement.execute(sql.toString());
+            counter_querry++;
+            if (!time_over) {
+                System.out.println(((System.currentTimeMillis() - start_time)/1000) + " seconds with a total of " + counter_querry + " querryies");
+            }
         }
     }
 

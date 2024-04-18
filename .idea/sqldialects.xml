@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SqlDialectMappings">
-    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/b4a1a83b-9e9e-4e42-8a35-2d0d6892da2e/console_1.sql" dialect="PostgreSQL" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/f9ac5995-6db5-41b4-a333-9f73d6e931f1/console.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/db/ConnectDB.java" dialect="PostgreSQL" />
+    <file url="PROJECT" dialect="PostgreSQL" />
   </component>
 </project>

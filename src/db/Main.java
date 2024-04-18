@@ -47,66 +47,69 @@ public class Main {
 
     public static void phase1(ConnectDB connectDB, int num_tuples, double sparsity, int num_attributes) throws SQLException {
         System.out.println("Phase 1: Started");
-        connectDB.generate(num_tuples, sparsity, num_attributes, "h");
+        connectDB.generate(num_tuples, sparsity, num_attributes, "h", 0);
         connectDB.generateToyBsp(num_tuples, "h");
         System.out.println("Phase 1: Finished");
     }
 
     public static void phase2(ConnectDB connectDB) throws SQLException {
         System.out.println("Phase 2: Started");
-        connectDB.h2v("h", "h2v");
-        connectDB.v2h("h2v", "v2h");
+        connectDB.h2v("h", "h2v", 0);
+        connectDB.v2h("h2v", "v2h", 0);
+        connectDB.printStorageSize("h");
+        connectDB.printStorageSize("v2h");
+        connectDB.printStorageSize("h2v");
         System.out.println("Phase 2: h2v && v2h generated");
         System.out.println("\n");
         System.out.println("Phase 2: Benchmarks enrolling");
-
+        long startTime = System.nanoTime();
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         System.out.println("Phase 2: Extending num_attributes");
         int[] numAttributesValues = {1000, 5000, 10000, 25000, 50000};
 
         for (int num_attributes : numAttributesValues) {
-            benchmark(connectDB, 5, 0.5, num_attributes, "att" + num_attributes, "att" + num_attributes + "_to_vertical", "att" + num_attributes + "_to_horizontal");
+            benchmark(connectDB, 5, 0.5, num_attributes, "att" + num_attributes, "att" + num_attributes + "_to_vertical", "att" + num_attributes + "_to_horizontal", 10);
         }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         System.out.println("Phase 2: Extending num_tuples");
-        int[] numTuplesValues = {5, 50, 500, 1000, 1500, 1599};
-
+        int[] numTuplesValues = {5, 50, 100, 500, 1000, 1250};
         for (int num_tuples : numTuplesValues) {
-            benchmark(connectDB, num_tuples, 0.5, 1000, "tup" + num_tuples, "tup" + num_tuples + "_to_vertical", "tup" + num_tuples + "_to_horizontal");
+            benchmark(connectDB, num_tuples, 0.5, 1000, "tup" + num_tuples, "tup" + num_tuples + "_to_vertical", "tup" + num_tuples + "_to_horizontal", 10);
         }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         System.out.println("Phase 2: Extending sparsity");
-        int[] numSparsityValues = {2, 3, 5, 7, 9};
+        int[] numSparsityValues = {2, 3, 5, 7, 10};
         for (int num_sparsity : numSparsityValues) {
             if(num_sparsity > 1) {
-                benchmark(connectDB, 5, Math.pow(2, -num_sparsity), 1000, "spar" + num_sparsity, "spar" + num_sparsity + "_to_vertical", "spar" + num_sparsity + "_to_horizontal");
+                benchmark(connectDB, 5, Math.pow(2, -num_sparsity), 1000, "spar" + num_sparsity, "spar" + num_sparsity + "_to_vertical", "spar" + num_sparsity + "_to_horizontal", 10);
             }
         }
+        System.out.println("Phase 2: Benchmark finished with a total time of: " + (System.nanoTime() - startTime) / 1000000 + " ms or " + ((System.nanoTime() - startTime) / 1000000000)/60 + "." + ((System.nanoTime() - startTime) / 1000000000) + "min");
     }
 
-    public static void benchmark(ConnectDB connectDB, int num_tuples, double sparsity, int num_attributes, String create_table, String create_vertical, String create_horizontal) throws SQLException {
+    public static void benchmark(ConnectDB connectDB, int num_tuples, double sparsity, int num_attributes, String create_table, String create_vertical, String create_horizontal, long time) throws SQLException {
         long startTime, verticalTime, horizontalTime;
         System.out.println("num_tuples = " + num_tuples + ", sparsity = " + sparsity + ", num_attributes = " + num_attributes);
 
+        startTime = System.nanoTime();
+        connectDB.generate(num_tuples, sparsity, num_attributes, create_table, time);
+        System.out.println("Table generated in: " + (System.nanoTime() - startTime) / 1000000 + " ms or " + (System.nanoTime() - startTime) / 1000000000 + " sek");
         //Prints storage size of each table
         connectDB.printStorageSize(create_table);
 
-        startTime = System.nanoTime();
-        connectDB.generate(num_tuples, sparsity, num_attributes, create_table);
-        System.out.println("Table generated in: " + (System.nanoTime() - startTime) / 1000000 + " ms or " + (System.nanoTime() - startTime) / 1000000000 + " sek");
-
-
         verticalTime = System.nanoTime();
-        connectDB.h2v(create_table, create_vertical);
+        connectDB.h2v(create_table, create_vertical, time);
         System.out.println("Vertical table generated in: " + (System.nanoTime() - verticalTime) / 1000000 + " ms or " + (System.nanoTime() - verticalTime) / 1000000000 + " sek");
-
+        //Prints storage size of each table
+        connectDB.printStorageSize(create_vertical);
 
         horizontalTime = System.nanoTime();
-        connectDB.v2h(create_vertical, create_horizontal);
+        connectDB.v2h(create_vertical, create_horizontal, time);
         System.out.println("Horizontal table generated in: " + (System.nanoTime() - horizontalTime) / 1000000 + " ms or " + (System.nanoTime() - horizontalTime) / 1000000000 + " sek");
-
+        //Prints storage size of each table
+        connectDB.printStorageSize(create_horizontal);
 
         System.out.println("Total duration time: " + (System.nanoTime() - startTime) / 1000000 + " ms or " + (System.nanoTime() - startTime) / 1000000000 + " sek");
         System.out.println("\n");
