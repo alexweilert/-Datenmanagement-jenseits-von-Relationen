@@ -7,28 +7,27 @@ import java.sql.Statement;
 
 public class Main {
 
-
     public static void main(String[] args) {
-        int num_tuples, num_attributes;
+        int num_attributes, num_tuples;
         double sparsity;
 
         if (args.length > 0 && args.length < 3) {
-            System.err.println("Usage: <num_tuples>, sparsity, num_attributes");
+            System.err.println("Usage: <num_attributes>, sparsity, num_tuples");
         }
 
         if (args.length == 0) {
-            num_tuples = 5;
+            num_attributes = 5;
             sparsity = 0.5;
-            num_attributes = 1000;
+            num_tuples = 1000;
         } else {
-            num_tuples = Integer.parseInt(args[0]);
+            num_attributes = Integer.parseInt(args[0]);
             sparsity = Double.parseDouble(args[1]);
-            num_attributes = Integer.parseInt(args[2]);
+            num_tuples = Integer.parseInt(args[2]);
         } try {
             ConnectDB connectDB = new ConnectDB();
             if (connectDB.openConnection()) {
                 System.out.println("Connected");
-                phase1(connectDB, num_tuples, sparsity, num_attributes);
+                phase1(connectDB, num_attributes, sparsity, num_tuples);
                 phase2(connectDB);
 
                 connectDB.closeConnection();
@@ -45,10 +44,10 @@ public class Main {
         }
     }
 
-    public static void phase1(ConnectDB connectDB, int num_tuples, double sparsity, int num_attributes) throws SQLException {
+    public static void phase1(ConnectDB connectDB, int num_attributes, double sparsity, int num_tuples) throws SQLException {
         System.out.println("Phase 1: Started");
-        connectDB.generate(num_tuples, sparsity, num_attributes, "h", 0);
-        connectDB.generateToyBsp(num_tuples, "h");
+        connectDB.generate(num_attributes, sparsity, num_tuples, "h", 0);
+        connectDB.generateToyBsp(num_attributes, "h");
         System.out.println("Phase 1: Finished");
     }
 
@@ -64,23 +63,22 @@ public class Main {
         System.out.println("Phase 2: Benchmarks enrolling");
         long startTime = System.nanoTime();
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        System.out.println("Phase 2: Extending num_attributes");
-        int[] numAttributesValues = {1000, 5000, 10000, 25000, 50000};
-
-        for (int num_attributes : numAttributesValues) {
-            benchmark(connectDB, 5, 0.5, num_attributes, "att" + num_attributes, "att" + num_attributes + "_to_vertical", "att" + num_attributes + "_to_horizontal", 10);
+        System.out.println("Phase 2: Extending num_tuples");
+        int[] numTuplesValues = {1000, 2000, 3000, 4000, 5000, 6000, 10000, 15000, 20000, 25000, 50000};
+        for (int num_tuples : numTuplesValues) {
+            benchmark(connectDB, 5, 0.5, num_tuples, "tup" + num_tuples, "tup" + num_tuples + "_to_vertical", "tup" + num_tuples + "_to_horizontal", 10);
         }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        System.out.println("Phase 2: Extending num_tuples");
-        int[] numTuplesValues = {5, 50, 100, 500, 1000, 1250};
-        for (int num_tuples : numTuplesValues) {
-            benchmark(connectDB, num_tuples, 0.5, 1000, "tup" + num_tuples, "tup" + num_tuples + "_to_vertical", "tup" + num_tuples + "_to_horizontal", 10);
+        System.out.println("Phase 2: Extending num_attributes");
+        int[] numAttributesValues = {5, 10, 20, 30, 40, 50, 100, 250, 500, 750, 1000, 1250};
+        for (int num_attributes : numAttributesValues) {
+            benchmark(connectDB, num_attributes, 0.5, 1000, "attr" + num_attributes, "attr" + num_attributes + "_to_vertical", "attr" + num_attributes + "_to_horizontal", 10);
         }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         System.out.println("Phase 2: Extending sparsity");
-        int[] numSparsityValues = {2, 3, 5, 7, 10};
+        int[] numSparsityValues = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         for (int num_sparsity : numSparsityValues) {
             if(num_sparsity > 1) {
                 benchmark(connectDB, 5, Math.pow(2, -num_sparsity), 1000, "spar" + num_sparsity, "spar" + num_sparsity + "_to_vertical", "spar" + num_sparsity + "_to_horizontal", 10);
@@ -89,12 +87,12 @@ public class Main {
         System.out.println("Phase 2: Benchmark finished with a total time of: " + (System.nanoTime() - startTime) / 1000000 + " ms or " + ((System.nanoTime() - startTime) / 1000000000)/60 + "." + ((System.nanoTime() - startTime) / 1000000000) + "min");
     }
 
-    public static void benchmark(ConnectDB connectDB, int num_tuples, double sparsity, int num_attributes, String create_table, String create_vertical, String create_horizontal, long time) throws SQLException {
+    public static void benchmark(ConnectDB connectDB, int num_attributes, double sparsity, int num_tuples, String create_table, String create_vertical, String create_horizontal, long time) throws SQLException {
         long startTime, verticalTime, horizontalTime;
-        System.out.println("num_tuples = " + num_tuples + ", sparsity = " + sparsity + ", num_attributes = " + num_attributes);
+        System.out.println("num_attributes = " + num_attributes + ", sparsity = " + sparsity + ", num_tuples = " + num_tuples);
 
         startTime = System.nanoTime();
-        connectDB.generate(num_tuples, sparsity, num_attributes, create_table, time);
+        connectDB.generate(num_attributes, sparsity, num_tuples, create_table, time);
         System.out.println("Table generated in: " + (System.nanoTime() - startTime) / 1000000 + " ms or " + (System.nanoTime() - startTime) / 1000000000 + " sek");
         //Prints storage size of each table
         connectDB.printStorageSize(create_table);

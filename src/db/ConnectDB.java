@@ -23,7 +23,7 @@ public class ConnectDB {
         this.connection.close();
     }
 
-    public void generate(int num_tuples, double sparsity, int num_attributes, String create_table, long time) throws SQLException {
+    public void generate(int num_attributes, double sparsity, int num_tuples, String create_table, long time) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             // Delete Tables and Views, if exists.
             if(create_table.equals("h")){
@@ -38,7 +38,7 @@ public class ConnectDB {
             boolean time_over = false;
             // Create Table
             statement.execute("CREATE TABLE " + create_table + " (\n oid INT PRIMARY KEY )");
-            for (int i = 1; i <= num_tuples; i++) {
+            for (int i = 1; i <= num_attributes; i++) {
                 statement.execute("ALTER TABLE " + create_table + " ADD a" + i + " VARCHAR");
             }
             char alphabet = 'a';
@@ -47,14 +47,14 @@ public class ConnectDB {
             int counter_string = 0;
 
             StringBuilder insertQuery = new StringBuilder("INSERT INTO " + create_table + " VALUES (");
-            for (int j = 1; j <= num_attributes; j++) {
+            for (int j = 1; j <= num_tuples; j++) {
                 if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
                     time_over = true;
                     System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
                 }
                 insertQuery.append("'").append(j).append("', ");
                 int string_int = 0;
-                for (int i = 1; i <= num_tuples; i++) {
+                for (int i = 1; i <= num_attributes; i++) {
                     if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
                         time_over = true;
                         System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
@@ -112,38 +112,38 @@ public class ConnectDB {
 
 
             // Create Views for sparsity
-            statement.executeUpdate(generateViewSpar(num_tuples, create_table));
+            statement.executeUpdate(generateViewSpar(num_attributes, create_table));
         }
     }
 
-    private static String generateViewSpar(int num_tuples, String create_table) {
+    private static String generateViewSpar(int num_attributes, String create_table) {
         StringBuilder generateViewSpar = new StringBuilder("CREATE VIEW SPARSITY AS SELECT ((ROUND(AVG(SPARSITY), 2)) + 1) AS CHECK_SPARSITY FROM ( ");
-        for (int i = 1; i < num_tuples; i++) {
+        for (int i = 1; i < num_attributes; i++) {
             if (i == 1) {
                 generateViewSpar.append("\n SELECT (1.0 - COUNT(a").append(i).append("))/ COUNT(*) AS SPARSITY FROM ").append(create_table).append(" UNION ALL");
             } else {
                 generateViewSpar.append("\n SELECT (1.0 - COUNT(a").append(i).append("))/ COUNT(*) FROM ").append(create_table).append(" UNION ALL");
             }
         }
-        generateViewSpar.append("\n SELECT (1.0 - COUNT(a").append(num_tuples).append("))/ COUNT(*) FROM ").append(create_table).append(" ) AS SINGLE_SPARSITY");
+        generateViewSpar.append("\n SELECT (1.0 - COUNT(a").append(num_attributes).append("))/ COUNT(*) FROM ").append(create_table).append(" ) AS SINGLE_SPARSITY");
         return generateViewSpar.toString();
     }
 
-    public void generateToyBsp(int num_tuples, String select_table) throws SQLException {
+    public void generateToyBsp(int num_attributes, String select_table) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             // Create Toy example out of table H
             StringBuilder generateViews = new StringBuilder("CREATE VIEW TOY_BSP_NOTNULL AS SELECT * FROM " + select_table + " WHERE");
-            for (int i = 1; i < num_tuples; i++) {
+            for (int i = 1; i < num_attributes; i++) {
                 generateViews.append(" a").append(i).append(" IS NOT NULL AND");
             }
-            generateViews.append(" a").append(num_tuples).append(" IS NOT NULL");
+            generateViews.append(" a").append(num_attributes).append(" IS NOT NULL");
             statement.executeUpdate(generateViews.toString());
 
             generateViews = new StringBuilder("CREATE VIEW TOY_BSP_NULL AS SELECT * FROM " + select_table + " WHERE");
-            for (int i = 1; i < num_tuples; i++) {
+            for (int i = 1; i < num_attributes; i++) {
                 generateViews.append(" a").append(i).append(" IS NULL OR");
             }
-            generateViews.append(" a").append(num_tuples).append(" IS NULL");
+            generateViews.append(" a").append(num_attributes).append(" IS NULL");
             statement.executeUpdate(generateViews.toString());
         }
     }
