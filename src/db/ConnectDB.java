@@ -37,7 +37,7 @@ public class ConnectDB {
             long counter_querry = 0;
             boolean time_over = false;
             // Create Table
-            statement.execute("CREATE TABLE " + create_table + " (\n oid INT PRIMARY KEY )");
+            statement.execute("CREATE TABLE " + create_table + " (\n oid INT PRIMARY KEY)");
             for (int i = 1; i <= num_attributes; i++) {
                 statement.execute("ALTER TABLE " + create_table + " ADD a" + i + " VARCHAR");
             }
@@ -148,15 +148,19 @@ public class ConnectDB {
         }
     }
 
+
+
     public void h2v(String select_table_name, String create_table, long time) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute("DROP MATERIALIZED VIEW IF EXISTS mv_"+create_table);
             statement.execute("DROP TABLE IF EXISTS " + create_table);
-            statement.execute("CREATE TABLE " + create_table + " (\n oid varchar, key varchar, val varchar)");
+
+
+            statement.execute("CREATE TABLE " + create_table + " (\n oid INT, key varchar, val varchar)");
 
             statement.execute("DROP INDEX IF EXISTS idx_key_" + create_table);
             long start_time = System.currentTimeMillis();
-            long max_time = System.currentTimeMillis() + (time * 1000);
+            long max_time = System.currentTimeMillis() + time * 1000;
             long counter_querry = 0;
             boolean time_over = false;
 
@@ -180,13 +184,11 @@ public class ConnectDB {
                         if (rs.getString(i) == null) {
                             count++;
                             if (rsmd.getColumnCount() == count) {
-                                for (int j = 2; j <= rsmd.getColumnCount(); j++) {
-                                    sql.append("( '").append(id).append("', '").append(rsmd.getColumnName(j)).append("', ").append(rs.getString(j)).append(" ), ");
-                                    counter_querry++;
-                                    if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
-                                        time_over = true;
-                                        System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
-                                    }
+                                sql.append("( '").append(id).append("', '").append(rsmd.getColumnName(i)).append("', ").append(rs.getString(i)).append(" ), ");
+                                counter_querry++;
+                                if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
+                                    time_over = true;
+                                    System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
                                 }
                             }
                         } else {
@@ -216,7 +218,7 @@ public class ConnectDB {
             ResultSetMetaData rsmd = rs.getMetaData();
 
             // Create Table V2H
-            StringBuilder sql = new StringBuilder("CREATE TABLE " + create_table + " ( \n oid VARCHAR, ");
+            StringBuilder sql = new StringBuilder("CREATE TABLE " + create_table + " ( \n oid INT PRIMARY KEY, ");
             StringBuilder attr = new StringBuilder();
             ArrayList<String> keys = new ArrayList<>();
 
@@ -250,7 +252,7 @@ public class ConnectDB {
             attr = new StringBuilder(attr.substring(0, attr.length() - 2));
             sql = new StringBuilder("INSERT INTO " + create_table + " ( oid, " + attr + " ) VALUES ");
 
-            rs = statement.executeQuery("SELECT * FROM " + select_table);
+            rs = statement.executeQuery("SELECT * FROM " + select_table + " ORDER BY oid ASC");
 
             String oid = "";
             String old_oid = "";
