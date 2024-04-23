@@ -56,9 +56,10 @@ public class Main {
 
     public static void phase2(ConnectDB connectDB) throws SQLException {
         System.out.println("Phase 2: Started");
-        connectDB.generate(1000, 0.5, 5, "h", 0);
+        connectDB.generate(5, 0.5, 10, "h", 0);
+        connectDB.generateToyBsp(5, "h");
         connectDB.printStorageSize("h");
-        connectDB.h2v("h", "h2v", "v2h", 0);
+        connectDB.h2v("toy_bsp_null", "h2v", "v2h", 0);
         connectDB.printStorageSize("h2v");
         connectDB.v2h("h2v", "v2h", 0);
         connectDB.printStorageSize("v2h");

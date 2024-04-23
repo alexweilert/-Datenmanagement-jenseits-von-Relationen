@@ -131,14 +131,46 @@ public class ConnectDB {
     public void generateToyBsp(int num_attributes, String select_table) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             // Create Toy example out of table H
-            StringBuilder generateViews = new StringBuilder("CREATE VIEW TOY_BSP_NOTNULL AS SELECT * FROM " + select_table + " WHERE");
+            StringBuilder generateViews = new StringBuilder("CREATE VIEW TOY_BSP_NOTNULL AS SELECT oid, \n");
+            for (int i = 1; i < num_attributes; i++) {
+                if (i % 2 == 1) {
+                    generateViews.append("CASE WHEN a" + i + " IS NULL THEN NULL ELSE CAST(a" + i + " AS VARCHAR) END as a" + i + ", \n");
+                } else {
+                    generateViews.append("CASE WHEN a" + i + " IS NULL THEN NULL ELSE CAST(a" + i + " AS INT) END as a" + i + ", \n");
+                }
+            }
+            if (num_attributes % 2 == 1) {
+                generateViews.append("CASE WHEN a" + num_attributes + " IS NULL THEN NULL ELSE CAST(a" + num_attributes + " AS VARCHAR) END as a" + num_attributes + " \n");
+            } else {
+                generateViews.append("CASE WHEN a" + num_attributes + " IS NULL THEN NULL ELSE CAST(a" + num_attributes + " AS INT) END as a" + num_attributes + " \n");
+            }
+            generateViews.append("FROM " + select_table + " WHERE \n");
+
             for (int i = 1; i < num_attributes; i++) {
                 generateViews.append(" a").append(i).append(" IS NOT NULL AND");
             }
             generateViews.append(" a").append(num_attributes).append(" IS NOT NULL");
             statement.executeUpdate(generateViews.toString());
 
-            generateViews = new StringBuilder("CREATE VIEW TOY_BSP_NULL AS SELECT * FROM " + select_table + " WHERE");
+
+
+            generateViews = new StringBuilder("CREATE VIEW TOY_BSP_NULL AS SELECT oid, \n");
+            for (int i = 1; i < num_attributes; i++) {
+                if (i % 2 == 1) {
+                    generateViews.append("CASE WHEN a" + i + " IS NULL THEN NULL ELSE CAST(a" + i + " AS VARCHAR) END as a" + i + ", \n");
+                } else {
+                    generateViews.append("CASE WHEN a" + i + " IS NULL THEN NULL ELSE CAST(a" + i + " AS INT) END as a" + i + ", \n");
+                }
+            }
+            if (num_attributes % 2 == 1) {
+                generateViews.append("CASE WHEN a" + num_attributes + " IS NULL THEN NULL ELSE CAST(a" + num_attributes + " AS VARCHAR) END as a" + num_attributes + " \n");
+            } else {
+                generateViews.append("CASE WHEN a" + num_attributes + " IS NULL THEN NULL ELSE CAST(a" + num_attributes + " AS INT) END as a" + num_attributes + " \n");
+            }
+            generateViews.append("FROM " + select_table + " WHERE \n");
+
+
+
             for (int i = 1; i < num_attributes; i++) {
                 generateViews.append(" a").append(i).append(" IS NULL OR");
             }
@@ -157,12 +189,6 @@ public class ConnectDB {
 
             statement.execute("CREATE TABLE " + create_table + "_string (\n oid INT, key varchar, val varchar)");
             statement.execute("CREATE TABLE " + create_table + "_integer (\n oid INT, key varchar, val INT)");
-
-            statement.execute("CREATE INDEX idx_key_" + create_table + "_string ON " + create_table + "_string (oid)");
-            statement.execute("CREATE INDEX idx_key_" + create_table + "_integer ON " + create_table + "_integer (oid)");
-
-            statement.execute("CREATE MATERIALIZED VIEW mv_" + create_table + "_string AS SELECT * FROM " + create_table + "_string WHERE key = 'a1'");
-            statement.execute("CREATE MATERIALIZED VIEW mv_" + create_table + "_integer AS SELECT * FROM " + create_table + "_integer WHERE key = 'a1'");
 
             long start_time = System.currentTimeMillis();
             long max_time = System.currentTimeMillis() + time * 1000;
@@ -217,7 +243,14 @@ public class ConnectDB {
             if (!time_over) {
                 System.out.println(((System.currentTimeMillis() - start_time)/1000) + " seconds with a total of " + counter_querry + " querryies");
             }
+
+            statement.execute("CREATE INDEX idx_key_" + create_table + "_string ON " + create_table + "_string (oid)");
+            statement.execute("CREATE INDEX idx_key_" + create_table + "_integer ON " + create_table + "_integer (oid)");
+
+            statement.execute("CREATE MATERIALIZED VIEW mv_" + create_table + "_string AS SELECT * FROM " + create_table + "_string WHERE key = 'a1'");
+            statement.execute("CREATE MATERIALIZED VIEW mv_" + create_table + "_integer AS SELECT * FROM " + create_table + "_integer WHERE key = 'a2'");
         }
+
     }
 
 
