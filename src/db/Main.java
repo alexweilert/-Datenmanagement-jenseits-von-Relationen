@@ -27,7 +27,10 @@ public class Main {
             ConnectDB connectDB = new ConnectDB();
             if (connectDB.openConnection()) {
                 System.out.println("Connected");
+                // Phase 1 -> Generate & Toy-Beispiel
                 phase1(connectDB, num_attributes, sparsity, num_tuples);
+
+                // Phase 2 -> H2V, V2H, und Benchmark
                 phase2(connectDB);
 
                 connectDB.closeConnection();
@@ -53,12 +56,16 @@ public class Main {
 
     public static void phase2(ConnectDB connectDB) throws SQLException {
         System.out.println("Phase 2: Started");
-        connectDB.h2v("h", "h2v", 0);
-        connectDB.v2h("h2v", "v2h", 0);
+        connectDB.generate(1000, 0.5, 5, "h", 0);
         connectDB.printStorageSize("h");
-        connectDB.printStorageSize("v2h");
+        connectDB.h2v("h", "h2v", "v2h", 0);
         connectDB.printStorageSize("h2v");
+        connectDB.v2h("h2v", "v2h", 0);
+        connectDB.printStorageSize("v2h");
         System.out.println("Phase 2: h2v && v2h generated");
+
+
+        // Hier beginnen die Benchmarks -> Um unnötige Tabellen/Views zu erhalten, kann der untere Bereich auch ausgegraut werden.
         System.out.println("\n");
         System.out.println("Phase 2: Benchmarks enrolling");
         long startTime = System.nanoTime();
@@ -85,7 +92,10 @@ public class Main {
             }
         }
         System.out.println("Phase 2: Benchmark finished with a total time of: " + (System.nanoTime() - startTime) / 1000000 + " ms or " + ((System.nanoTime() - startTime) / 1000000000)/60 + "." + ((System.nanoTime() - startTime) / 1000000000) + "min");
+
     }
+
+
 
     public static void benchmark(ConnectDB connectDB, int num_attributes, double sparsity, int num_tuples, String create_table, String create_vertical, String create_horizontal, long time) throws SQLException {
         long startTime, verticalTime, horizontalTime;
@@ -98,7 +108,7 @@ public class Main {
         connectDB.printStorageSize(create_table);
 
         verticalTime = System.nanoTime();
-        connectDB.h2v(create_table, create_vertical, time);
+        connectDB.h2v(create_table, create_vertical, create_horizontal, time);
         System.out.println("Vertical table generated in: " + (System.nanoTime() - verticalTime) / 1000000 + " ms or " + (System.nanoTime() - verticalTime) / 1000000000 + " sek");
         //Prints storage size of each table
         connectDB.printStorageSize(create_vertical);
@@ -106,11 +116,10 @@ public class Main {
         horizontalTime = System.nanoTime();
         connectDB.v2h(create_vertical, create_horizontal, time);
         System.out.println("Horizontal table generated in: " + (System.nanoTime() - horizontalTime) / 1000000 + " ms or " + (System.nanoTime() - horizontalTime) / 1000000000 + " sek");
-        //Prints storage size of each table
-        connectDB.printStorageSize(create_horizontal);
 
         System.out.println("Total duration time: " + (System.nanoTime() - startTime) / 1000000 + " ms or " + (System.nanoTime() - startTime) / 1000000000 + " sek");
         System.out.println("\n");
+
     }
 
 

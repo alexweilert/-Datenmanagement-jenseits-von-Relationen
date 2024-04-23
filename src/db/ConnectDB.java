@@ -102,21 +102,19 @@ public class ConnectDB {
             if (!time_over) {
                 System.out.println(((System.currentTimeMillis() - start_time)/1000) + " seconds with a total of " + counter_querry + " querryies");
             }
-            // Table created
-
-            // Create View for Columns
-            statement.executeUpdate("CREATE VIEW NUM_ATTRIBUTES AS SELECT count(*) FROM " + create_table);
-
-            // Create View for Rows
-            statement.executeUpdate("CREATE VIEW NUM_TUPLES AS SELECT count(*) FROM information_schema.columns WHERE table_name = '" + create_table + "'");
-
-
-            // Create Views for sparsity
-            statement.executeUpdate(generateViewSpar(num_attributes, create_table));
+            generateViews(num_attributes, create_table);
         }
     }
 
-    private static String generateViewSpar(int num_attributes, String create_table) {
+    private void generateViews(int num_attributes, String create_table) throws SQLException {
+        try (Statement statement = this.connection.createStatement()) {
+        // Create View for Columns
+        statement.executeUpdate("CREATE VIEW NUM_ATTRIBUTES AS SELECT count(*) FROM " + create_table);
+
+        // Create View for Rows
+        statement.executeUpdate("CREATE VIEW NUM_TUPLES AS SELECT count(*) FROM information_schema.columns WHERE table_name = '" + create_table + "'");
+
+        // Create Views for sparsity
         StringBuilder generateViewSpar = new StringBuilder("CREATE VIEW SPARSITY AS SELECT ((ROUND(AVG(SPARSITY), 2)) + 1) AS CHECK_SPARSITY FROM ( ");
         for (int i = 1; i < num_attributes; i++) {
             if (i == 1) {
@@ -126,7 +124,8 @@ public class ConnectDB {
             }
         }
         generateViewSpar.append("\n SELECT (1.0 - COUNT(a").append(num_attributes).append("))/ COUNT(*) FROM ").append(create_table).append(" ) AS SINGLE_SPARSITY");
-        return generateViewSpar.toString();
+        statement.execute(generateViewSpar.toString());
+        }
     }
 
     public void generateToyBsp(int num_attributes, String select_table) throws SQLException {
@@ -149,27 +148,31 @@ public class ConnectDB {
     }
 
 
-
-    public void h2v(String select_table_name, String create_table, long time) throws SQLException {
+    public void h2v(String select_table_name, String create_table, String create_v2h_view, long time) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
-            statement.execute("DROP MATERIALIZED VIEW IF EXISTS mv_"+create_table);
-            statement.execute("DROP TABLE IF EXISTS " + create_table);
+            statement.execute("DROP VIEW IF EXISTS " + create_v2h_view);
+            statement.execute("DROP MATERIALIZED VIEW IF EXISTS mv_" + create_table + ", mv_" + create_table + "_string, mv_" + create_table + "_integer");
+            statement.execute("DROP TABLE IF EXISTS " + create_table + ", " + create_table +"_string, " + create_table + "_integer");
+            statement.execute("DROP INDEX IF EXISTS idx_key_" + create_table + ", idx_key_" + create_table + "_string, idx_key_" + create_table + "_integer");
 
+            statement.execute("CREATE TABLE " + create_table + "_string (\n oid INT, key varchar, val varchar)");
+            statement.execute("CREATE TABLE " + create_table + "_integer (\n oid INT, key varchar, val INT)");
 
-            statement.execute("CREATE TABLE " + create_table + " (\n oid INT, key varchar, val varchar)");
+            statement.execute("CREATE INDEX idx_key_" + create_table + "_string ON " + create_table + "_string (oid)");
+            statement.execute("CREATE INDEX idx_key_" + create_table + "_integer ON " + create_table + "_integer (oid)");
 
-            statement.execute("DROP INDEX IF EXISTS idx_key_" + create_table);
+            statement.execute("CREATE MATERIALIZED VIEW mv_" + create_table + "_string AS SELECT * FROM " + create_table + "_string WHERE key = 'a1'");
+            statement.execute("CREATE MATERIALIZED VIEW mv_" + create_table + "_integer AS SELECT * FROM " + create_table + "_integer WHERE key = 'a1'");
+
             long start_time = System.currentTimeMillis();
             long max_time = System.currentTimeMillis() + time * 1000;
             long counter_querry = 0;
             boolean time_over = false;
 
-            statement.execute("CREATE INDEX idx_key_" + create_table + " ON " + create_table + " (oid)");
-
-            statement.execute("CREATE MATERIALIZED VIEW mv_" + create_table + " AS SELECT * FROM " + create_table + " WHERE key = 'a1'");
             ResultSet rs = statement.executeQuery("SELECT * FROM " + select_table_name);
             ResultSetMetaData rsmd = rs.getMetaData();
-            StringBuilder sql = new StringBuilder("INSERT INTO " + create_table + " (oid, key, val) VALUES ");
+            StringBuilder sql_string = new StringBuilder("INSERT INTO " + create_table + "_string (oid, key, val) VALUES ");
+            StringBuilder sql_integer = new StringBuilder("INSERT INTO " + create_table + "_integer (oid, key, val) VALUES ");
             String id = "";
             while (rs.next()) {
                 int count = 1;
@@ -184,7 +187,7 @@ public class ConnectDB {
                         if (rs.getString(i) == null) {
                             count++;
                             if (rsmd.getColumnCount() == count) {
-                                sql.append("( '").append(id).append("', '").append(rsmd.getColumnName(i)).append("', ").append(rs.getString(i)).append(" ), ");
+                                sql_string.append("( '").append(id).append("', '").append(rsmd.getColumnName(i)).append("', ").append(rs.getString(i)).append(" ), ");
                                 counter_querry++;
                                 if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
                                     time_over = true;
@@ -192,7 +195,11 @@ public class ConnectDB {
                                 }
                             }
                         } else {
-                            sql.append("('").append(id).append("', '").append(rsmd.getColumnName(i)).append("', '").append(rs.getString(i)).append("'), ");
+                            if (i % 2 == 0) {
+                                sql_string.append("('").append(id).append("', '").append(rsmd.getColumnName(i)).append("', '").append(rs.getString(i)).append("'), ");
+                            } else {
+                                sql_integer.append("('").append(id).append("', '").append(rsmd.getColumnName(i)).append("', '").append(rs.getString(i)).append("'), ");
+                            }
                             counter_querry++;
                             if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
                                 time_over = true;
@@ -202,25 +209,59 @@ public class ConnectDB {
                     }
                 }
             }
-            sql = new StringBuilder(sql.substring(0, sql.length() - 2));
-            statement.executeUpdate(sql.toString());
+            sql_string = new StringBuilder(sql_string.substring(0, sql_string.length() - 2));
+            statement.executeUpdate(sql_string.toString());
+            sql_integer = new StringBuilder(sql_integer.substring(0, sql_integer.length() - 2));
+            statement.executeUpdate(sql_integer.toString());
+
             if (!time_over) {
                 System.out.println(((System.currentTimeMillis() - start_time)/1000) + " seconds with a total of " + counter_querry + " querryies");
             }
         }
     }
 
+
     public void v2h(String select_table, String create_table, long time) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
-            statement.execute("DROP TABLE IF EXISTS " + create_table);
+            statement.execute("DROP VIEW IF EXISTS " + create_table);
+            ArrayList<String> keys = new ArrayList<>();
 
-            ResultSet rs = statement.executeQuery("SELECT * FROM " + select_table);
+            keys = getKeys(select_table);
+
+            StringBuilder sql = new StringBuilder("CREATE VIEW " + create_table + " AS SELECT COALESCE(s.oid, i.oid) AS oid,");
+            for (int i = 0; i < keys.size(); i++) {
+                if (i % 2 == 0) { // String
+                    sql.append("\n MAX(CASE WHEN s.key = '" + keys.get(i) + "' THEN s.val END) AS a" + (i+1) + ", ");
+                } else {          // Integer
+                    sql.append("\n MAX(CASE WHEN i.key = '" + keys.get(i) + "' THEN i.val END) AS a" + (i+1) + ", ");
+                }
+            }
+
+            sql = new StringBuilder(sql.substring(0, sql.length() - 2));
+            sql.append("\n FROM " + select_table + "_string s \n" +
+                    "FULL OUTER JOIN " + select_table + "_integer i ON s.oid = i.oid \n" +
+                    "GROUP BY COALESCE(s.oid, i.oid) ORDER BY COALESCE(s.oid, i.oid)");
+            statement.executeUpdate(sql.toString());
+        }
+    }
+
+    public ArrayList<String> getKeys(String select_table) throws SQLException{
+        try (Statement statement = this.connection.createStatement()) {
+            ArrayList<String> keys = new ArrayList<>();
+
+            ResultSet rs = statement.executeQuery("SELECT * FROM " + select_table + "_string");
             ResultSetMetaData rsmd = rs.getMetaData();
 
-            // Create Table V2H
-            StringBuilder sql = new StringBuilder("CREATE TABLE " + create_table + " ( \n oid INT PRIMARY KEY, ");
-            StringBuilder attr = new StringBuilder();
-            ArrayList<String> keys = new ArrayList<>();
+            while (rs.next()) {
+                for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+                    if (rsmd.getColumnName(i).equals("key") && !keys.contains(rs.getString(i))) {
+                        keys.add(rs.getString(i));
+                    }
+                }
+            }
+
+            rs = statement.executeQuery("SELECT * FROM " + select_table +"_integer");
+            rsmd = rs.getMetaData();
 
             while (rs.next()) {
                 for (int i = 1; i <= rsmd.getColumnCount(); i++) {
@@ -231,119 +272,10 @@ public class ConnectDB {
             }
 
             keys.sort((o1, o2) -> o1.compareTo(o2));
-            for (int i = 0; i < keys.size(); i++) {
-                sql.append(keys.get(i)).append(" VARCHAR, ");
-                attr.append(keys.get(i)).append(", ");
-            }
-            sql = new StringBuilder(sql.substring(0, sql.length() - 2));
-            sql.append(")");
-            // Generate Table V2H out of String.
-            statement.executeUpdate(sql.toString());
-
-            statement.execute("DROP INDEX IF EXISTS idx_key_" + create_table);
-
-            long start_time = System.currentTimeMillis();
-            long max_time = System.currentTimeMillis() + (time * 1000);
-            long counter_querry = 0;
-            boolean time_over = false;
-
-            statement.execute("CREATE INDEX idx_key_" + create_table + " ON " + create_table + " (oid)");
-
-            attr = new StringBuilder(attr.substring(0, attr.length() - 2));
-            sql = new StringBuilder("INSERT INTO " + create_table + " ( oid, " + attr + " ) VALUES ");
-
-            rs = statement.executeQuery("SELECT * FROM " + select_table + " ORDER BY oid ASC");
-
-            String oid = "";
-            String old_oid = "";
-            String key = "";
-            int key_index = 0;
-            int counter = 0;
-            String val = "";
-
-            while (rs.next()) {
-                for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-                    if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
-                        time_over = true;
-                        System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
-                    }
-                    if (rsmd.getColumnName(i).equals("oid")) {
-                        oid = rs.getString(i);
-                    } else if (rsmd.getColumnName(i).equals("key")) {
-                        key = rs.getString(i);
-                        key_index = Integer.valueOf(key.substring(1));
-                    } else if (rsmd.getColumnName(i).equals("val")) {
-                        val = rs.getString(i);
-                    }
-                }
-                if (oid.equals(old_oid)) {
-                    if (counter < key_index - 1) {
-                        while (counter < key_index - 1) {
-                            sql.append(", NULL");
-                            counter++;
-                        }
-                    }
-                    if (val != null) {
-                        sql.append(", '").append(val).append("'");
-                    } else {
-                        sql.append(", NULL");
-                    }
-                    counter++;
-                } else {
-                    if (counter >= keys.size()) {
-                        sql.append(" ), ");
-                        counter = 0;
-                        counter_querry++;
-                        if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
-                            time_over = true;
-                            System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
-                        }
-                    } else if (!old_oid.isEmpty()) {
-                        for (int j = counter; j < keys.size(); j++) {
-                            if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
-                                time_over = true;
-                                System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
-                            }
-                            sql.append(", NULL");
-                            counter++;
-                        }
-                        sql.append(" ), ");
-                        if(System.currentTimeMillis() >= max_time-200 && System.currentTimeMillis() <= max_time+200 && !time_over){
-                            time_over = true;
-                            System.out.println("In " + time + " seconds we did generate " + counter_querry + " querrys");
-                        }
-                        counter = 0;
-                        counter_querry++;
-                    }
-
-                    sql.append("( ").append(oid);
-                    old_oid = oid;
-                    if (counter < key_index) {
-                        for (int i = 1; i < key_index; i++) {
-                            sql.append(", NULL");
-                            counter++;
-                        }
-                    }
-                    if (val != null) {
-                        sql.append(", '").append(val).append("'");
-                    } else {
-                        sql.append(", NULL");
-                    }
-                    counter++;
-                }
-            }
-            while (counter < keys.size()) {
-                sql.append(", NULL");
-                counter++;
-            }
-            sql.append(" )");
-            statement.execute(sql.toString());
-            counter_querry++;
-            if (!time_over) {
-                System.out.println(((System.currentTimeMillis() - start_time)/1000) + " seconds with a total of " + counter_querry + " querryies");
-            }
+            return keys;
         }
     }
+
 
     public void printStorageSize(String tableName) {
         try (Statement statement = this.connection.createStatement()) {
