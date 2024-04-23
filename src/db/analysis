@@ -76,6 +76,33 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+
+-----------------Mögliche Verbesserung für q_ii-----------------------
+CREATE OR REPLACE FUNCTION q_ii(arg VARCHAR, argValue INTEGER)
+    RETURNS TABLE (oid INTEGER)
+AS $$
+BEGIN
+    -- Check if the specified column exists and matches the required criteria
+    IF EXISTS (
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name = 'v2h' AND column_name LIKE arg
+    ) THEN
+        RETURN QUERY EXECUTE format('
+            SELECT v2h.oid
+            FROM v2h
+            WHERE v2h.%I = $1
+        ', arg ) USING argValue;
+    ELSE
+        RAISE EXCEPTION 'Column % does not exist or is invalid', arg;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT * FROM q_ii('a2', 2);
+EXPLAIN ANALYZE SELECT * FROM q_ii('a2', 2);
+
+
 -----------------benchmark für api------------------------------------
 SELECT * FROM benchmark_api();
 
