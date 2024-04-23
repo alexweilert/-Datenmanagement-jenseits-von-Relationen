@@ -1,0 +1,128 @@
+Select * from H;-- |R| = 1, mit oid uniform aus [1, max(oid)]
+Select * from v2h where oid = 1; -- |R| = 1, mit oid uniform aus [1, max(oid)]
+Select oid from v2h where a2 = 1; -- |R| ca 5, mit i uniform aus [1,|A|] und ai uniform aus dom(ai)
+
+------------- funktion q_i erstellt ----------------
+Select * from q_i(5);
+
+CREATE OR REPLACE FUNCTION q_i(arg INTEGER)
+    RETURNS TABLE (oid INTEGER, a_name TEXT, a_value TEXT)
+AS
+$$
+DECLARE
+    a_column_name TEXT;
+    a_data_type TEXT;
+BEGIN
+    FOR a_column_name, a_data_type IN
+        SELECT column_name, data_type
+        FROM information_schema.columns
+        WHERE table_name = 'v2h'
+          AND column_name LIKE 'a%'
+        LOOP
+            IF a_data_type = 'integer' THEN
+                EXECUTE format('
+                SELECT v2h.oid, v2h.%I::TEXT
+                FROM v2h
+                WHERE v2h.oid = $1', a_column_name)
+                    INTO oid, a_value
+                    USING arg;
+            ELSE
+                EXECUTE format('
+                SELECT v2h.oid, v2h.%I::TEXT
+                FROM v2h
+                WHERE v2h.oid = $1', a_column_name)
+                    INTO oid, a_value
+                    USING arg;
+            END IF;
+
+            a_name := a_column_name;
+            RETURN NEXT;
+        END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+-----------------------------------------------------
+EXPLAIN ANALYZE SELECT * FROM v2h;
+
+EXPLAIN ANALYZE SELECT * FROM q_i(42);
+EXPLAIN ANALYZE SELECT * FROM q_ii('a1', 2);
+
+EXPLAIN analyze Select * from v2h where oid = 42;
+explain analyze Select oid from v2h where a2 = 2;
+explain analyze select * from benchmark_api();
+
+------------- Funktion q_ii erstellt ----------------
+Select * from q_ii('a4', 2);
+
+CREATE OR REPLACE FUNCTION q_ii(arg VARCHAR, argValue INTEGER)
+    RETURNS TABLE (oid INTEGER)
+AS $$
+DECLARE
+    a_record RECORD;
+BEGIN
+    FOR a_record IN
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name = 'v2h' AND column_name LIKE 'a%'
+        LOOP
+            IF a_record.column_name = arg THEN
+                RETURN QUERY EXECUTE format('
+                SELECT v2h.oid
+                FROM v2h
+                WHERE v2h.%I = $1', a_record.column_name)
+                    USING argValue;
+            END IF;
+        END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+-----------------benchmark für api------------------------------------
+SELECT * FROM benchmark_api();
+
+CREATE OR REPLACE FUNCTION benchmark_api()
+    RETURNS TABLE (q_i_execution DECIMAL, q_ii_execution DECIMAL)
+AS $$
+DECLARE
+    q_i_start_time TIMESTAMP WITH TIME ZONE;
+    q_i_end_time TIMESTAMP WITH TIME ZONE;
+    q_ii_start_time TIMESTAMP WITH TIME ZONE;
+    q_ii_end_time TIMESTAMP WITH TIME ZONE;
+BEGIN
+    -- Benchmark für q_i
+    RAISE NOTICE 'Benchmark für q_i wird gestartet...';
+    q_i_start_time := clock_timestamp();
+
+    perform q_i(42);
+
+    q_i_end_time := clock_timestamp();
+    q_i_execution := EXTRACT(milliseconds FROM q_i_end_time - q_i_start_time);
+    RAISE NOTICE 'Benchmark für q_i abgeschlossen. Ausführungszeit: %ms Millisekunden', q_i_execution;
+
+    -- Benchmark für q_ii
+    RAISE NOTICE 'Benchmark für q_ii wird gestartet...';
+    q_ii_start_time := clock_timestamp();
+
+    perform q_ii('a2', 2);
+
+    q_ii_end_time := clock_timestamp();
+    q_ii_execution := EXTRACT(milliseconds FROM q_ii_end_time - q_ii_start_time);
+    RAISE NOTICE 'Benchmark für q_ii abgeschlossen. Ausführungszeit: %ms Millisekunden', q_ii_execution;
+
+    RETURN QUERY SELECT q_i_execution, q_ii_execution;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-----------------------------------------------------------
+SELECT table_name,
+       pg_size_pretty(table_size)   AS table_size,
+       pg_size_pretty(indexes_size) AS indexes_size,
+       pg_size_pretty(total_size)   AS total_size
+FROM (SELECT table_name,
+             pg_table_size(table_name)          AS table_size,
+             pg_indexes_size(table_name)        AS indexes_size,
+             pg_total_relation_size(table_name) AS total_size
+      FROM (SELECT ('"' || table_schema || '"."' || table_name || '"') AS table_name
+            FROM information_schema.tables
+            WHERE table_name IN ('h2v', 'v2h')) AS all_tables
+      ORDER BY total_size DESC) AS pretty_sizes;
