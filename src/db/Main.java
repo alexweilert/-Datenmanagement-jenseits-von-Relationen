@@ -56,7 +56,7 @@ public class Main {
 
     public static void phase2(ConnectDB connectDB) throws SQLException {
         System.out.println("Phase 2: Started");
-        connectDB.generate(5, 0.5, 10, "h", 0);
+        connectDB.generate(5, 0.5, 10000, "h", 0);
         connectDB.generateToyBsp(5, "h");
         connectDB.printStorageSize("h");
         connectDB.h2v("toy_bsp_null", "h2v", "v2h", 0);
@@ -72,7 +72,7 @@ public class Main {
         long startTime = System.nanoTime();
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         System.out.println("Phase 2: Extending num_tuples");
-        int[] numTuplesValues = {1000, 2000, 3000, 4000, 5000, 6000, 10000, 15000, 20000, 25000, 50000};
+        int[] numTuplesValues = {1000, 2000, 3000, 4000, 5000, 6000, 10000, 15000, 20000, 25000, 50000, 100000};
         for (int num_tuples : numTuplesValues) {
             benchmark(connectDB, 5, 0.5, num_tuples, "tup" + num_tuples, "tup" + num_tuples + "_to_vertical", "tup" + num_tuples + "_to_horizontal", 10);
         }

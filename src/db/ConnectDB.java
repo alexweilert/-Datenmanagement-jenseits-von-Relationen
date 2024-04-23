@@ -11,7 +11,7 @@ public class ConnectDB {
 
     public boolean openConnection() throws SQLException, ClassNotFoundException {
         Class.forName("org.postgresql.Driver");
-        this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "alex");
+        this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "dragi");
         return !isConnectionClosed();
     }
 
@@ -250,13 +250,13 @@ public class ConnectDB {
             statement.execute("CREATE MATERIALIZED VIEW mv_" + create_table + "_string AS SELECT * FROM " + create_table + "_string WHERE key = 'a1'");
             statement.execute("CREATE MATERIALIZED VIEW mv_" + create_table + "_integer AS SELECT * FROM " + create_table + "_integer WHERE key = 'a2'");
         }
-
     }
 
 
     public void v2h(String select_table, String create_table, long time) throws SQLException {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute("DROP VIEW IF EXISTS " + create_table);
+            statement.execute("DROP MATERIALIZED VIEW IF EXISTS mv_" + create_table + ", mv_" + create_table + "_string, mv_" + create_table + "_integer");
             ArrayList<String> keys = new ArrayList<>();
 
             keys = getKeys(select_table);
@@ -275,6 +275,8 @@ public class ConnectDB {
                     "FULL OUTER JOIN " + select_table + "_integer i ON s.oid = i.oid \n" +
                     "GROUP BY COALESCE(s.oid, i.oid) ORDER BY COALESCE(s.oid, i.oid)");
             statement.executeUpdate(sql.toString());
+
+            statement.execute("CREATE MATERIALIZED VIEW mv_" + create_table + " AS SELECT * FROM " + create_table + " WHERE a2 = '1'");
         }
     }
 
