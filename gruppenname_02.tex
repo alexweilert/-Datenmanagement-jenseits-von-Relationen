@@ -6,6 +6,20 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{graphicx}
+\usepackage{caption}
+\usepackage{csquotes}
+\usepackage{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{luainputenc}
+\usepackage{hyperref}
+
+\usepackage[
+    backend=biber,
+    style=numeric,
+    sorting=none
+]{biblatex}
+
+\addbibresource{references/references.bib}
 
 \setlength{\parindent}{0em}
 \setlength{\parskip}{0.5em}
@@ -38,9 +52,9 @@
 }
 
 \author{
-  Gruppen Nummer (e.g. A1, B5, B3) \\
+  Gruppen Nummer 8 \\
   \large Weilert Alexander, 12119653 \\
-  \large Jovanovic Dragana, StudentID2
+  \large Jovanovic Dragana, 11850325
 }
 
 \begin{document}
@@ -54,24 +68,26 @@ Dieses Reporting Template dient der Vorbereitung der Abgabe von Phase 1.
 Zeigen Sie den Code der Funktion generate() als Listing oder Screenshot.
 Gehen Sie (kurz) auf die wesentlichen Aspekte ein.
 
-Die generate(int l, double sparsity) Funktion wird mit einer Table_size l und sparsity aufgerufen. 
-Zu Beginn werden die Tabllen A, B gelöscht und erstellt. Die View C wird nur gelöscht, da diese im Laufe des Codes generiert wird.
-Weiters wird ein weiterer Aufruf auf die Funktion generateMatrixA (int l, double sparsity) und generateMatrixB(int l, double sparsity) ausgeführt, um das aufgefüllt Array für die Matrix zu generieren. 
-generateMatrixA und generateMatrixB sind fast identisch, beide Funktionen vergleichen die Zahl Sparsity mit Math.random(),  ist der Wert kleiner wird der Matrix an der Stelle eine generierte Integer Zahl zwischen 1 und 11 hinzugefügt, andernfalls die Zahl 0.  
-Die Unterschiede der Beiden Funktionen bauen sich nur auf dem Array auf. 
-Im Code wird unser Array mit \enquoute{int[l-1][l] matrix} oder mit \enquoute{int[l][l-1] matrix} aufgerufen. Weiters werden auch die beiden for Schleifen miteinander vertauscht, so wird bei generateMatrixA auf \enquoute{i < l-1} abgeprüft und bei generateMatrixB auf \enquoute{j < l-1}.
-Anschließend folgt ein weiter Aufruf auf insertMatrix(String tableName, int[][] matrix), welcher nichts anderes Macht, als die zuvor generierten Werte aus generateMatrix in das DBMS, mittels einem INSERT Befehls zu speichern.
-Die letzten Aufruf ansatz0(int[][] matrixA, int[][] matrixB) und ansatz1() generieren beide auf Unterschiedliche Weise die Matrixmultiplikation für C. 
-ansatz0 macht dies per Algorithmus und ansatz1 tut dies über eine selection auf a und b. 
+Die Funktion generate(int l, double sparsity) erstellt Tabellen mit der Größe l und einem sparsity.
+Beim Start werden die Tabllen A und B gelöscht und neu erstellt. 
+Die View C wird gelöscht, da sie in der Laufzeit generiert wird.
+Danach werden die Funktionen generateMatrixA(int l, double sparsity) und generateMatrixB(int l, double sparsity) aufgerufen, um Arrays für die Matrizen zu erstellen. 
+Beide Funktionen vergleichen die sparsity mit Math.random() und fügen an den entsprechenden Stellen der Matrix entweder eine zufällige Ganzzahl zwischen 1 und 11 oder 0 hinzu.
+Die Unterschiede zwischen den Funktionen liegen nur im Array-Aufbau. 
+Die Matrix wird entweder mit `int[l-1][l] matrix' oder `int[l][l-1] matrix' definiert, ebenfalls wird dies in der Schleifen- bedingung jeweils verkehrt aufgerufen.
+Danach werden die generierten Matrizen mit insertMatrix(String tableName, int[][] matrix) in das DBMS eingefügt. 
+Die Funktionen ansatz0(int[][] matrixA, int[][] matrixB) und ansatz1() berechnen die Matrixmultiplikation für C auf unterschiedliche Weise, entweder per Algorithmus oder durch eine Selektion auf A und B. 
 
 \begin{lstlisting}[style=dmrJava]
-  public void generate(int l, double sparsity) {
+public void generate(int l, double sparsity) {
     try (Statement statement = this.connection.createStatement()) {
         statement.execute("DROP VIEW IF EXISTS C");
         statement.execute("DROP TABLE IF EXISTS A, B");
         // Create Table
-        statement.execute("CREATE TABLE A (i int, j int, val int)");
-        statement.execute("CREATE TABLE B (i int, j int, val int)");
+        statement.execute("
+        CREATE TABLE A (i INT, j INT, val INT, PRIMARY KEY (i, j))");
+        statement.execute("
+        CREATE TABLE B (i INT, j INT, val INT, PRIMARY KEY (i, j))");
 
         int[][] matrixA = generateMatrixA(l, sparsity);
         int[][] matrixB = generateMatrixB(l, sparsity);
@@ -93,7 +109,8 @@ public int[][] generateMatrixA(int l, double sparsity) {
     for (int i = 0; i < ( l - 1 ); i++) {
         for (int j = 0; j < l; j++) {
             if (random.nextDouble() > sparsity) {
-                matrixA[i][j] = random.nextInt(1, 11); // Random value between 0 and 10
+                matrixA[i][j] = random.nextInt(1, 11); 
+                // Random value between 0 and 10
             } else {
                 matrixA[i][j] = 0;
             }
@@ -111,7 +128,7 @@ public int[][] generateMatrixB(int l, double sparsity) {
     for (int i = 0; i < l; i++) {
         for (int j = 0; j < (l - 1); j++) {
             if (random.nextDouble() > sparsity) {
-                matrixB[i][j] = random.nextInt(1, 11);// Random value between 0 and 10
+                matrixB[i][j] = random.nextInt(1, 11);
             } else {
                 matrixB[i][j] = 0;
             }
@@ -122,14 +139,17 @@ public int[][] generateMatrixB(int l, double sparsity) {
     return matrixB;
 }
 
-
 public void insertMatrix(String tableName, int[][] matrix) {
-    try (Statement statement = this.connection.createStatement()) {
-        StringBuilder insertQuery = new StringBuilder("INSERT INTO " + tableName + " VALUES ");
+    try (Statement statement = this.connection.createStatement())
+     {
+        StringBuilder insertQuery = new StringBuilder(
+            "INSERT INTO " + tableName + " VALUES ");
         for (int i = 0; i < matrix.length; i++) {
             for (int j = 0; j < matrix[i].length; j++) {
                 if (matrix[i][j] != 0) {
-                    insertQuery.append("(").append(i+1).append(",").append(j+1).append(",").append(matrix[i][j]).append("),");
+                    insertQuery.append("(").append(i+1)
+                    .append(",").append(j+1).append(",")
+                    .append(matrix[i][j]).append("),");
                 }
             }
         }
@@ -146,27 +166,50 @@ public void insertMatrix(String tableName, int[][] matrix) {
 Geben Sie das Create Table Statement für Matrix $A$ an.
 
 \begin{lstlisting}[style=dmrsql]
-  CREATE TABLE A (i int, j int, val int)
+  CREATE TABLE A (i INT, j INT, val INT, PRIMARY KEY (i, j))
 \end{lstlisting}
 
 Für die Übung bereiten Sie eine Demo des Datenimports vor.
 
-Da der Import der Daten für die Matrix automatisch und zufällig passiert, muss mit den Daten gehandelt werden, die nun vorgerechnet werden. 
-Mit der folgenden Seite, können Sie sich die Matrixmultiplikation berechnen lassen % Link oder Abändern. 
-
+Da der Import der Daten für die Matrix automatisch und zufällig passiert, muss mit den Daten gerechnet werden, die generiert werden. 
+Mit der folgenden Seite: \href{https://matrixcalc.org/de/}{\textit{Matrix Rechner}}, können Sie sich die Matrixmultiplikation berechnen lassen. 
 
 \subsection*{Wahl des Toy Beispiels (0.5 Punkte)}
 
 Geben Sie Matrix $A$ und $B$ als 2D Array an.
-
-% Neuen Screenshot reinwerfen
-%\includegraphics{2D_Darstellung.jpg}
+\begin{figure}[H]
+    \begin{minipage}[b]{.4\linewidth}
+        \begin{center}
+            \includegraphics{2d_table_matrix_a.jpg}
+        \end{center}
+        \caption{2D Ansicht der Tabelle A}
+    \end{minipage}
+    \hspace{.1\linewidth}
+    \begin{minipage}[b]{.4\linewidth}
+        \begin{center}
+            \includegraphics{2d_table_matrix_b.jpg} 
+        \end{center}
+        \caption{2D Ansicht der Tabelle B}
+    \end{minipage}
+\end{figure}
 
 Zeigen Sie die äquivalente Darstellung der Matrix $A$ und $B$ in der Datenbank.
 
-% Neuen Screenshot reinwerfen
-%\includegraphics{table_a.jpg}
-%\includegraphics{table_b.jpg}
+\begin{figure}[H]
+    \begin{minipage}[b]{.4\linewidth}
+        \begin{center}
+            \includegraphics[width=\linewidth]{table_matrix_a.jpg}
+        \end{center}
+        \caption{Tabelle A im DBMS}
+    \end{minipage}
+    \hspace{.1\linewidth}
+    \begin{minipage}[b]{.4\linewidth}
+        \begin{center}
+            \includegraphics[width=\linewidth]{table_matrix_b.jpg}
+        \end{center}
+        \caption{Tabelle B im DBMS}
+    \end{minipage}
+\end{figure}
 
 \subsubsection*{Implementierung von Ansatz 0 (0.5 Punkte)}
 
@@ -174,37 +217,56 @@ Zeigen Sie den Code der Matrixmultiplikation als Listing oder Screenshot.
 Erläutern Sie (kurz), welche Laufzeit ihr Algorithmus hat und warum das Kriterium keinen Algorithmus mit sub-kubischer Laufzeit zu wählen erfüllt ist.
 
 \begin{lstlisting}[style=dmrJava]
-    public void ansatz0(int[][] matrixA, int[][] matrixB) {
-        try (Statement statement = this.connection.createStatement()) {
-            statement.execute("DROP TABLE IF EXISTS matrix_algorithm");
-            statement.execute("CREATE TABLE matrix_algorithm (i int, j int, val int)");
-            StringBuilder insertQuery = new StringBuilder("INSERT INTO matrix_algorithm VALUES ");
-            int[][] result = new int[matrixA.length][matrixB[0].length];
-            System.out.println("--- Matrix Calculator ---");
-            for (int i = 0; i < matrixA.length; i++) {
-                for (int j = 0; j < matrixB[0].length; j++) {
-                    for (int k = 0; k < matrixA[0].length; k++) {
-                        result[i][j] += matrixA[i][k] * matrixB[k][j];
-                    }
-                insertQuery.append("(").append(i+1).append(",").append(j+1).append(",").append(result[i][j]).append("),");
-                System.out.print(result[i][j] + " ");
+public void ansatz0(int[][] matrixA, int[][] matrixB) {
+    try (Statement statement = this.connection.createStatement())
+     {
+       statement.execute("DROP TABLE IF EXISTS matrix_algorithm");
+       statement.execute("CREATE TABLE 
+            matrix_algorithm (i INT, j INT, val INT, PRIMARY KEY (i, j))");
+       StringBuilder insertQuery = new StringBuilder(
+            "INSERT INTO matrix_algorithm VALUES ");
+       int[][] result = new int[matrixA.length][matrixB[0].length];
+        System.out.println("--- Matrix Calculator ---");
+        for (int i = 0; i < matrixA.length; i++) {
+            for (int j = 0; j < matrixB[0].length; j++) {
+                for (int k = 0; k < matrixA[0].length; k++) {
+                    result[i][j] += matrixA[i][k] * matrixB[k][j];
                 }
-            System.out.println();
+            insertQuery.append("(").append(i+1).append(",")
+            .append(j+1).append(",").append(result[i][j]).append("),");
+            System.out.print(result[i][j] + " ");
             }
-            insertQuery.deleteCharAt(insertQuery.length() - 1);
-            statement.executeUpdate(insertQuery.toString());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        System.out.println();
         }
+        insertQuery.deleteCharAt(insertQuery.length() - 1);
+        statement.executeUpdate(insertQuery.toString());
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
     }
+}
 \end{lstlisting}
 
-Der Algorithmus hat eine Laufzeit von O(n^3), da er drei verschiedene for-Schleifen durchläuft, die jeweils die länge l besitzen.
-Für einen Algorithmus mit sub-kubischer Laufzeit müssen folgende Bedingungen erfüllt sein:
+Ein sub-kubischer Algorithmus bewegt sich in der Laufzeit kleiner O(n$^{3}$).
+Unser Algorithmus hat im worst case eine Laufzeit von O(n$^{3}$) und ist somit kubisch. \cite{MatrixMultiplikation},
+Ein kubischer Algorithmus muss die Bedingung erfüllen in der Laufzeit O(n$^{3}$) zu sein. \cite{Kubischer},
+Dies ist bei uns der Fall, da dieser alle Spalten und Zeilen, der drei verschiedenen for-Schleifen durchläuft, die jeweils die länge n besitzen.
 
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics{matrix_algorithm.jpg}
+        \caption{Ergebnis C der Matrixmultiplikation anhand des Algorithmus}
+    \end{center}
+ \end{figure}
 
 \subsubsection*{Implementierung von Ansatz 1 (0.5 Punkte)}
 Berechnen Sie von Hand das Ergebnis $C = A \times B$ für ihr Toy Beispiel und geben Sie es nachfolgend an.
+ 
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=14.5cm,height=8cm]{20240512_200204.jpg}
+        \caption{Die von Hand berechnete Matrixmultiplikation}
+    \end{center}
+ \end{figure}
 
 \begin{lstlisting}[style=dmrJava]
 public void ansatz1() {
@@ -225,14 +287,19 @@ Zeigen Sie, dass Ihr System $C$ korrekt berechnet (z.B. als Screenshot)
 
 Wir nehmen an, dass das von Hand berechnete Ergebnis richtig bestimmt worden ist.
 Vergleichen wir nun das von Hand berechnete, den Ansatz0 und den Ansatz1 so sehen wir eine Übereinstimmung aller Views, weswegen wir nun davon ausgehen können, das der Ansatz1 die Summe richtig berechnet.
-% Screenshot reinwerfen
-\includegraphics{}
+
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=7.5cm,height=5cm]{Selection_View_C.jpg}
+        \caption{Vom System Berechnete Matrixmultiplikation über die Selektion aus Ansatz1}
+    \end{center}
+\end{figure}
 
 \subsection*{Zeitmamagement}
 
-Benötigte Zeit pro Person (nur Phase 1): \\ \\
-\textbf{Alexander Weilert: 5h} \\
-\textbf{Dragana Jovanovic: 5h}
+Benötigte Zeit pro Person (nur Phase 1): \\
+\textbf{Alexander Weilert: 6h} \\
+\textbf{Dragana Jovanovic: 6h}
 
 \subsection*{References}
 
@@ -240,10 +307,12 @@ Benötigte Zeit pro Person (nur Phase 1): \\ \\
   \centering
   \begin{tabular}{c}
     \hline
-    \textbf{Important:} Reference your information sources! \tabularnewline
+    \textbf{Important:} Reference your information sources!\tabularnewline
     Remove this section if you use footnotes to reference your information sources.\tabularnewline
     \hline
   \end{tabular}
 \end{table}
+
+\printbibliography[title=References]
 
 \end{document}

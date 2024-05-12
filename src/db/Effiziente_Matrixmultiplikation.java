@@ -31,8 +31,8 @@ public class Effiziente_Matrixmultiplikation {
             statement.execute("DROP VIEW IF EXISTS C");
             statement.execute("DROP TABLE IF EXISTS A, B");
             // Create Table
-            statement.execute("CREATE TABLE A (i int, j int, val int)");
-            statement.execute("CREATE TABLE B (i int, j int, val int)");
+            statement.execute("CREATE TABLE A (i INT, j INT , val INT, PRIMARY KEY (i, j))");
+            statement.execute("CREATE TABLE A (i INT, j INT , val INT, PRIMARY KEY (i, j))");
 
             int[][] matrixA = generateMatrixA(l, sparsity);
             int[][] matrixB = generateMatrixB(l, sparsity);
@@ -103,7 +103,7 @@ public class Effiziente_Matrixmultiplikation {
     public void ansatz0(int[][] matrixA, int[][] matrixB) {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute("DROP TABLE IF EXISTS matrix_algorithm");
-            statement.execute("CREATE TABLE matrix_algorithm (i int, j int, val int)");
+            statement.execute("CREATE TABLE matrix_algorithm (i INT, j INT, val INT, PRIMARY KEY (i, j))");
             StringBuilder insertQuery = new StringBuilder("INSERT INTO matrix_algorithm VALUES ");
             int[][] result = new int[matrixA.length][matrixB[0].length];
             System.out.println("--- Matrix Calculator ---");
