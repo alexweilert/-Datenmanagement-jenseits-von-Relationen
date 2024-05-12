@@ -102,21 +102,23 @@ public class Effiziente_Matrixmultiplikation {
 
     public void ansatz0(int[][] matrixA, int[][] matrixB) {
         try (Statement statement = this.connection.createStatement()) {
+            statement.execute("DROP TABLE IF EXISTS matrix_algorithm");
+            statement.execute("CREATE TABLE matrix_algorithm (i int, j int, val int)");
+            StringBuilder insertQuery = new StringBuilder("INSERT INTO matrix_algorithm VALUES ");
             int[][] result = new int[matrixA.length][matrixB[0].length];
+            System.out.println("--- Matrix Calculator ---");
             for (int i = 0; i < matrixA.length; i++) {
                 for (int j = 0; j < matrixB[0].length; j++) {
                     for (int k = 0; k < matrixA[0].length; k++) {
                         result[i][j] += matrixA[i][k] * matrixB[k][j];
                     }
+                insertQuery.append("(").append(i+1).append(",").append(j+1).append(",").append(result[i][j]).append("),");
+                System.out.print(result[i][j] + " ");
                 }
+            System.out.println();
             }
-            System.out.println("--- Matrix Calculator ---");
-            for (int i = 0; i < result.length; i++) {
-                for (int j = 0; j < result.length; j++) {
-                    System.out.print(result[i][j] + " ");
-                }
-                System.out.println();
-            }
+            insertQuery.deleteCharAt(insertQuery.length() - 1);
+            statement.executeUpdate(insertQuery.toString());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
