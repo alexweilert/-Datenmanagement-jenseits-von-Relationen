@@ -5,6 +5,7 @@
 \usepackage{float}
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{graphicx}
 
 \setlength{\parindent}{0em}
 \setlength{\parskip}{0.5em}
@@ -38,8 +39,8 @@
 
 \author{
   Gruppen Nummer (e.g. A1, B5, B3) \\
-  \large Lastname1 Firstname1, StudentID1 \\
-  \large Lastname2 Firstname2, StudentID2 
+  \large Weilert Alexander, 12119653 \\
+  \large Jovanovic Dragana, StudentID2
 }
 
 \begin{document}
@@ -50,12 +51,85 @@ Dieses Reporting Template dient der Vorbereitung der Abgabe von Phase 1.
 
 \subsection*{Datengenerator für Matrizen mit Sparsity (0.5 Punkte)}
 
-Zeigen Sie den Code der Funktion generate() als Listing oder Screenshot. Gehen Sie (kurz) auf die wesentlichen Aspekte ein. 
+Zeigen Sie den Code der Funktion generate() als Listing oder Screenshot.
+Gehen Sie (kurz) auf die wesentlichen Aspekte ein.
 
 \youranswerhere{}
 
 \begin{lstlisting}[style=dmrJava]
-[Code der generate Fuktion...]
+  public void generate(int l, double sparsity) {
+    try (Statement statement = this.connection.createStatement()) {
+        statement.execute("DROP VIEW IF EXISTS C");
+        statement.execute("DROP TABLE IF EXISTS A, B");
+        // Create Table
+        statement.execute("CREATE TABLE A (i int, j int, val int)");
+        statement.execute("CREATE TABLE B (i int, j int, val int)");
+
+        int[][] matrixA = generateMatrixA(l, sparsity);
+        int[][] matrixB = generateMatrixB(l, sparsity);
+        insertMatrix("A", matrixA);
+        insertMatrix("B", matrixB);
+
+        ansatz0(matrixA, matrixB); // Matrix Calculator per Algorithm
+        ansatz1();                 // Matrix Calculator per Select
+
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+    }
+}
+
+public int[][] generateMatrixA(int l, double sparsity) {
+    Random random = new Random();
+    int[][] matrixA = new int[l-1][l];
+    System.out.println("--- Matrix A ---");
+    for (int i = 0; i < ( l - 1 ); i++) {
+        for (int j = 0; j < l; j++) {
+            if (random.nextDouble() > sparsity) {
+                matrixA[i][j] = random.nextInt(1, 11); // Random value between 0 and 10
+            } else {
+                matrixA[i][j] = 0;
+            }
+            System.out.print(matrixA[i][j] + " ");
+        }
+        System.out.println();
+    }
+    return matrixA;
+}
+
+public int[][] generateMatrixB(int l, double sparsity) {
+    Random random = new Random();
+    int[][] matrixB = new int[l][l-1];
+    System.out.println("--- Matrix B ---");
+    for (int i = 0; i < l; i++) {
+        for (int j = 0; j < (l - 1); j++) {
+            if (random.nextDouble() > sparsity) {
+                matrixB[i][j] = random.nextInt(1, 11);// Random value between 0 and 10
+            } else {
+                matrixB[i][j] = 0;
+            }
+            System.out.print(matrixB[i][j] + " ");
+        }
+        System.out.println();
+    }
+    return matrixB;
+}
+
+public void insertMatrix(String tableName, int[][] matrix) {
+    try (Statement statement = this.connection.createStatement()) {
+        StringBuilder insertQuery = new StringBuilder("INSERT INTO " + tableName + " VALUES ");
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[i].length; j++) {
+                if (matrix[i][j] != 0) {
+                    insertQuery.append("(").append(i+1).append(",").append(j+1).append(",").append(matrix[i][j]).append("),");
+                }
+            }
+        }
+        insertQuery.deleteCharAt(insertQuery.length() - 1);
+        statement.executeUpdate(insertQuery.toString());
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+    }
+}
 \end{lstlisting}
 
 \subsection*{Import der Matrizen in das DBMS (0.5 Punkte)}
@@ -63,7 +137,7 @@ Zeigen Sie den Code der Funktion generate() als Listing oder Screenshot. Gehen S
 Geben Sie das Create Table Statement für Matrix $A$ an.
 
 \begin{lstlisting}[style=dmrsql]
-[Create Table A ...]
+  CREATE TABLE A (i int, j int, val int)
 \end{lstlisting}
 
 Für die Übung bereiten Sie eine Demo des Datenimports vor.
@@ -75,11 +149,12 @@ Für die Übung bereiten Sie eine Demo des Datenimports vor.
 
 Geben Sie Matrix $A$ und $B$ als 2D Array an.
 
-\youranswerhere{}
+\includegraphics{2D_Darstellung.jpg}
 
 Zeigen Sie die äquivalente Darstellung der Matrix $A$ und $B$ in der Datenbank.
 
-\youranswerhere{}
+\includegraphics{table_a.jpg}
+\includegraphics{table_b.jpg}
 
 \subsubsection*{Implementierung von Ansatz 0 (0.5 Punkte)}
 
@@ -87,20 +162,55 @@ Zeigen Sie den Code der Matrixmultiplikation als Listing oder Screenshot. Erläu
 
 
 \begin{lstlisting}[style=dmrJava]
-[Matrixmultiplikation ...]
+  public void ansatz0(int[][] matrixA, int[][] matrixB) {
+    try (Statement statement = this.connection.createStatement()) {
+        int[][] result = new int[matrixA.length][matrixB[0].length];
+        for (int i = 0; i < matrixA.length; i++) {
+            for (int j = 0; j < matrixB[0].length; j++) {
+                for (int k = 0; k < matrixA[0].length; k++) {
+                    result[i][j] += matrixA[i][k] * matrixB[k][j];
+                }
+            }
+        }
+        System.out.println("--- Matrix Calculator ---");
+        for (int i = 0; i < result.length; i++) {
+            for (int j = 0; j < result.length; j++) {
+                System.out.print(result[i][j] + " ");
+            }
+            System.out.println();
+        }
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+    }
+}
 \end{lstlisting}
 
 
 \subsubsection*{Implementierung von Ansatz 1 (0.5 Punkte)}
 Berechnen Sie von Hand das Ergebnis $C = A \times B$ für ihr Toy Beispiel und geben Sie es nachfolgend an.
 
-\youranswerhere{}
+\begin{lstlisting}[style=dmrJava]
+public void ansatz1() {
+  try (Statement statement = this.connection.createStatement()) {
+      statement.execute("CREATE VIEW C AS " +
+          "SELECT a.i, b.j, SUM(A.val * B.val) " +
+              "FROM a,  b " +
+              "WHERE a.j = b.i " +
+              "GROUP BY a.i, b.j");
+
+      } catch (SQLException e) {
+      throw new RuntimeException(e);
+  }
+}
+\end{lstlisting}
 
 Zeigen Sie, dass Ihr System $C$ korrekt berechnet (z.B. als Screenshot)
 
 \subsection*{Zeitmamagement}
 
-Benötigte Zeit pro Person (nur Phase 1): \textbf{XXX}
+Benötigte Zeit pro Person (nur Phase 1): \\ \\
+\textbf{Alexander Weilert: 5h} \\
+\textbf{Dragana Jovanovic: 5h}
 
 \subsection*{References}
 
