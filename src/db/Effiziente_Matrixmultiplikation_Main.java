@@ -10,7 +10,6 @@ public class Effiziente_Matrixmultiplikation_Main {
         e_matrix_mult.openConnection();
 
         matrix = e_matrix_mult.generate(5, 0.5);
-
         e_matrix_mult.ansatz0(matrix);
         e_matrix_mult.ansatz1();
         e_matrix_mult.ansatz2(matrix);

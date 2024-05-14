@@ -33,61 +33,38 @@ public class Effiziente_Matrixmultiplikation {
             // Create Table
             statement.execute("CREATE TABLE A (i INT, j INT , val INT, PRIMARY KEY (i, j))");
             statement.execute("CREATE TABLE B (i INT, j INT , val INT, PRIMARY KEY (i, j))");
+
             int[][][] matrix = new int[2][][];
-            matrix[0] = generateMatrixA(l, sparsity);
-            matrix[1] = generateMatrixB(l, sparsity);
+            int[][] matrixA = new int[l-1][l];
+            int[][] matrixB = new int[l][l-1];
+
+            matrix[0] = generateMatrix(matrixA, sparsity);
+            matrix[1] = generateMatrix(matrixB, sparsity);
+
             insertMatrix("A", matrix[0]);
             insertMatrix("B", matrix[1]);
 
-            //ansatz0(matrixA, matrixB); // Matrix Calculator per Algorithm
-            //ansatz1();// Matrix Calculator per Select
             return matrix;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static int[][][] getArrays(int[][] a, int[][] b) {
-        int[][][] result = new int[2][][]; // Ein 2D-Array, das zwei 2D-Arrays enthält
-        result[0] = a;
-        result[1] = b;
-        return result;
-    }
-
-    public int[][] generateMatrixA(int l, double sparsity) {
+    public int[][] generateMatrix(int[][] matrix, double sparsity) {
         Random random = new Random();
-        int[][] matrixA = new int[l - 1][l];
         System.out.println("--- Matrix A ---");
-        for (int i = 0; i < (l - 1); i++) {
-            for (int j = 0; j < l; j++) {
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[0].length; j++) {
                 if (random.nextDouble() > sparsity) {
-                    matrixA[i][j] = random.nextInt(1, 11); // Random value between 0 and 10
+                    matrix[i][j] = random.nextInt(1, 11); // Random value between 0 and 10
                 } else {
-                    matrixA[i][j] = 0;
+                    matrix[i][j] = 0;
                 }
-                System.out.print(matrixA[i][j] + " ");
+                System.out.print(matrix[i][j] + " ");
             }
             System.out.println();
         }
-        return matrixA;
-    }
-
-    public int[][] generateMatrixB(int l, double sparsity) {
-        Random random = new Random();
-        int[][] matrixB = new int[l][l - 1];
-        System.out.println("--- Matrix B ---");
-        for (int i = 0; i < l; i++) {
-            for (int j = 0; j < (l - 1); j++) {
-                if (random.nextDouble() > sparsity) {
-                    matrixB[i][j] = random.nextInt(1, 11);// Random value between 0 and 10
-                } else {
-                    matrixB[i][j] = 0;
-                }
-                System.out.print(matrixB[i][j] + " ");
-            }
-            System.out.println();
-        }
-        return matrixB;
+        return matrix;
     }
 
     public void insertMatrix(String tableName, int[][] matrix) {
@@ -151,12 +128,31 @@ public class Effiziente_Matrixmultiplikation {
             int[][] matrixA = matrix[0];
             int[][] matrixB = matrix[1];
             statement.execute("DROP TABLE IF EXISTS new_A, new_B");
-            statement.execute("CREATE TABLE new_A (i INT, row_array INT[], PRIMARY KEY (i))");
-            statement.execute("CREATE TABLE new_B (j INT, col_array INT[], PRIMARY KEY (j))");
+            statement.execute("CREATE TABLE new_A (i INT, row INT[], PRIMARY KEY (i))");
+            statement.execute("CREATE TABLE new_B (j INT, col INT[], PRIMARY KEY (j))");
 
-            statement.execute("UPDATE new_A SET row_array = ARRAY(SELECT val FROM A WHERE i = A.i)");
-            statement.execute("UPDATE new_B SET col_array = ARRAY(SELECT val FROM B WHERE j = B.j)");
+            insertAnsatz("new_A", matrix[0]);
+            insertAnsatz("new_B", matrix[1]);
 
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void insertAnsatz(String table_name, int[][] matrix){
+        try (Statement statement = this.connection.createStatement()) {
+            for (int i = 0; i < matrix.length; i++) {
+                StringBuilder updateQueryA = new StringBuilder("INSERT INTO " + table_name + " VALUES (");
+                updateQueryA.append(i + 1).append(", ARRAY[");
+                for (int j = 0; j < matrix[0].length; j++) {
+                    updateQueryA.append(matrix[i][j]);
+                    if (j < matrix[i].length - 1) {
+                        updateQueryA.append(",");
+                    }
+                }
+                updateQueryA.append("])");
+                statement.executeUpdate(updateQueryA.toString());
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
