@@ -193,13 +193,13 @@ public class Effiziente_Matrixmultiplikation {
                     "END;\n" +
                     "$$ LANGUAGE plpgsql;");
 
-            statement.execute("DROP TABLE IF EXISTS C_A2");
-            statement.execute("CREATE TABLE C_A2 (i INT, j INT, val INT, PRIMARY KEY (i, j))");
+            statement.execute("DROP TABLE IF EXISTS new_C");
+            statement.execute("CREATE TABLE new_C (i INT, j INT, val INT, PRIMARY KEY (i, j))");
 
-//
-            statement.execute("INSERT INTO C_A2 (i, j, val) " +
+            statement.execute("INSERT INTO new_C (i, j, val) " +
                     "SELECT new_A.i, new_B.j, dotproduct(new_A.row, new_B.col) " +
-                    "FROM new_A, new_B");
+                    "FROM new_A, new_B " +
+                    "WHERE dotproduct(new_A.row, new_B.col) != 0");
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
