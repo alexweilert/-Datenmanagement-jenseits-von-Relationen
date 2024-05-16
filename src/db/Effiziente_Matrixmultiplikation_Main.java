@@ -12,8 +12,8 @@ public class Effiziente_Matrixmultiplikation_Main {
         matrix = e_matrix_mult.generate(5, 0.5);
         e_matrix_mult.ansatz0(matrix);
         e_matrix_mult.ansatz1();
+        e_matrix_mult.createVectorTable(matrix);
         e_matrix_mult.ansatz2(matrix);
-
         e_matrix_mult.closeConnection();
     }
     

@@ -1,9 +1,6 @@
 package db;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Random;
 
 public class Effiziente_Matrixmultiplikation {
@@ -14,7 +11,7 @@ public class Effiziente_Matrixmultiplikation {
 
     public boolean openConnection() throws SQLException, ClassNotFoundException {
         Class.forName("org.postgresql.Driver");
-        this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "alex");
+        this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "dragi");
         return !isConnectionClosed();
     }
 
@@ -123,23 +120,21 @@ public class Effiziente_Matrixmultiplikation {
         }
     }
 
-    public void ansatz2(int[][][] matrix) {
+    public void createVectorTable(int[][][] matrix) {
         try (Statement statement = this.connection.createStatement()) {
-            int[][] matrixA = matrix[0];
-            int[][] matrixB = matrix[1];
             statement.execute("DROP TABLE IF EXISTS new_A, new_B");
             statement.execute("CREATE TABLE new_A (i INT, row INT[], PRIMARY KEY (i))");
             statement.execute("CREATE TABLE new_B (j INT, col INT[], PRIMARY KEY (j))");
 
-            insertAnsatz("new_A", matrix[0]);
-            insertAnsatz("new_B", matrix[1]);
+            insertAnsatzA("new_A", matrix[0]);
+            insertAnsatzB("new_B", matrix[1]);
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void insertAnsatz(String table_name, int[][] matrix){
+    public void insertAnsatzA(String table_name, int[][] matrix){
         try (Statement statement = this.connection.createStatement()) {
             for (int i = 0; i < matrix.length; i++) {
                 StringBuilder updateQueryA = new StringBuilder("INSERT INTO " + table_name + " VALUES (");
@@ -157,4 +152,58 @@ public class Effiziente_Matrixmultiplikation {
             throw new RuntimeException(e);
         }
     }
+
+    public void insertAnsatzB(String table_name, int[][] matrix){
+        try (Statement statement = this.connection.createStatement()) {
+            for (int i = 0; i < matrix[0].length; i++) { //column i
+                StringBuilder updateQueryB = new StringBuilder("INSERT INTO " + table_name + " VALUES (");
+                updateQueryB.append(i + 1).append(", ARRAY[");
+                for (int j = 0; j < matrix.length; j++) { //row j
+                    updateQueryB.append(matrix[j][i]);
+                    if (j < matrix[i].length) {
+                        updateQueryB.append(",");
+                    }
+                }
+                updateQueryB.append("])");
+                statement.executeUpdate(updateQueryB.toString());
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    public void ansatz2(int[][][] matrix) {
+        try (Statement statement = this.connection.createStatement()) {
+            statement.execute("DROP FUNCTION IF EXISTS dotproduct(int[], int[])");
+
+            statement.execute("CREATE OR REPLACE FUNCTION dotproduct(vector1 int[], vector2 int[]) RETURNS int AS $$\n" +
+                    "DECLARE\n" +
+                    "    result int := 0;\n" +
+                    "BEGIN\n" +
+                    "    IF array_length(vector1, 1) != array_length(vector2, 1) THEN\n" +
+                    "        RAISE EXCEPTION 'Vectors must be of the same length';\n" +
+                    "    END IF;\n" +
+                    "\n" +
+                    "    FOR i IN 1..array_length(vector1, 1) LOOP\n" +
+                    "        result := result + vector1[i] * vector2[i];\n" +
+                    "    END LOOP;\n" +
+                    "\n" +
+                    "    RETURN result;\n" +
+                    "END;\n" +
+                    "$$ LANGUAGE plpgsql;");
+
+            statement.execute("DROP TABLE IF EXISTS C_A2");
+            statement.execute("CREATE TABLE C_A2 (i INT, j INT, val INT, PRIMARY KEY (i, j))");
+
+//
+            statement.execute("INSERT INTO C_A2 (i, j, val) " +
+                    "SELECT new_A.i, new_B.j, dotproduct(new_A.row, new_B.col) " +
+                    "FROM new_A, new_B");
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
+
