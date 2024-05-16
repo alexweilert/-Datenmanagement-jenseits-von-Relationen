@@ -1,6 +1,9 @@
 package db;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Random;
 
 public class Effiziente_Matrixmultiplikation {
@@ -11,7 +14,7 @@ public class Effiziente_Matrixmultiplikation {
 
     public boolean openConnection() throws SQLException, ClassNotFoundException {
         Class.forName("org.postgresql.Driver");
-        this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "dragi");
+        this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "alex");
         return !isConnectionClosed();
     }
 
@@ -34,10 +37,10 @@ public class Effiziente_Matrixmultiplikation {
             int[][][] matrix = new int[2][][];
             int[][] matrixA = new int[l-1][l];
             int[][] matrixB = new int[l][l-1];
-
+            //System.out.println("--- Matrix A ---");
             matrix[0] = generateMatrix(matrixA, sparsity);
             matrix[1] = generateMatrix(matrixB, sparsity);
-
+            //System.out.println("--- Matrix B ---");
             insertMatrix("A", matrix[0]);
             insertMatrix("B", matrix[1]);
 
@@ -48,8 +51,7 @@ public class Effiziente_Matrixmultiplikation {
     }
 
     public int[][] generateMatrix(int[][] matrix, double sparsity) {
-        Random random = new Random();
-        System.out.println("--- Matrix A ---");
+        Random random = new Random(123456789);
         for (int i = 0; i < matrix.length; i++) {
             for (int j = 0; j < matrix[0].length; j++) {
                 if (random.nextDouble() > sparsity) {
@@ -57,9 +59,9 @@ public class Effiziente_Matrixmultiplikation {
                 } else {
                     matrix[i][j] = 0;
                 }
-                System.out.print(matrix[i][j] + " ");
+                //System.out.print(matrix[i][j] + " ");
             }
-            System.out.println();
+            //System.out.println();
         }
         return matrix;
     }
@@ -83,22 +85,33 @@ public class Effiziente_Matrixmultiplikation {
 
     public void ansatz0(int[][][] matrix) {
         try (Statement statement = this.connection.createStatement()) {
+            long max_time = System.currentTimeMillis() + 60000;
+            long counter = 0;
+            boolean time_over = false;
             int[][] matrixA = matrix[0];
             int[][] matrixB = matrix[1];
             statement.execute("DROP TABLE IF EXISTS matrix_algorithm");
             statement.execute("CREATE TABLE matrix_algorithm (i INT, j INT, val INT, PRIMARY KEY (i, j))");
             StringBuilder insertQuery = new StringBuilder("INSERT INTO matrix_algorithm VALUES ");
             int[][] result = new int[matrixA.length][matrixB[0].length];
-            System.out.println("--- Matrix Calculator ---");
+            //System.out.println("--- Matrix Calculator ---");
             for (int i = 0; i < matrixA.length; i++) {
                 for (int j = 0; j < matrixB[0].length; j++) {
                     for (int k = 0; k < matrixA[0].length; k++) {
                         result[i][j] += matrixA[i][k] * matrixB[k][j];
+                        counter++;
+                        if(System.currentTimeMillis() >= max_time && System.currentTimeMillis() <= max_time+300 && !time_over){
+                            time_over = true;
+                            System.out.println("In 1 Minute we got " + counter + " calculations");
+                        }
                     }
                     insertQuery.append("(").append(i + 1).append(",").append(j + 1).append(",").append(result[i][j]).append("),");
-                    System.out.print(result[i][j] + " ");
+                    //System.out.print(result[i][j] + " ");
                 }
-                System.out.println();
+                //System.out.println();
+            }
+            if(!time_over) {
+                System.out.println("In " + (System.currentTimeMillis() - max_time + 60000) + " we got " + counter + " calculations");
             }
             insertQuery.deleteCharAt(insertQuery.length() - 1);
             statement.executeUpdate(insertQuery.toString());
@@ -120,21 +133,21 @@ public class Effiziente_Matrixmultiplikation {
         }
     }
 
-    public void createVectorTable(int[][][] matrix) {
+    public void createArrayTable(int[][][] matrix) {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute("DROP TABLE IF EXISTS new_A, new_B");
-            statement.execute("CREATE TABLE new_A (i INT, row INT[], PRIMARY KEY (i))");
-            statement.execute("CREATE TABLE new_B (j INT, col INT[], PRIMARY KEY (j))");
+            statement.execute("CREATE TABLE new_A (i INT PRIMARY KEY, row INT[])");
+            statement.execute("CREATE TABLE new_B (j INT PRIMARY KEY , col INT[])");
 
-            insertAnsatzA("new_A", matrix[0]);
-            insertAnsatzB("new_B", matrix[1]);
+            insertArrayA("new_A", matrix[0]);
+            insertArrayB("new_B", matrix[1]);
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void insertAnsatzA(String table_name, int[][] matrix){
+    public void insertArrayA(String table_name, int[][] matrix){
         try (Statement statement = this.connection.createStatement()) {
             for (int i = 0; i < matrix.length; i++) {
                 StringBuilder updateQueryA = new StringBuilder("INSERT INTO " + table_name + " VALUES (");
@@ -153,7 +166,7 @@ public class Effiziente_Matrixmultiplikation {
         }
     }
 
-    public void insertAnsatzB(String table_name, int[][] matrix){
+    public void insertArrayB(String table_name, int[][] matrix){
         try (Statement statement = this.connection.createStatement()) {
             for (int i = 0; i < matrix[0].length; i++) { //column i
                 StringBuilder updateQueryB = new StringBuilder("INSERT INTO " + table_name + " VALUES (");
@@ -172,19 +185,30 @@ public class Effiziente_Matrixmultiplikation {
         }
     }
 
+    public void ansatz2() {
+        try (Statement statement = this.connection.createStatement()) {
+            statement.execute("DROP TABLE IF EXISTS new_C");
+            statement.execute("CREATE TABLE new_C (i INT, j INT, val INT, PRIMARY KEY (i, j))");
 
-    public void ansatz2(int[][][] matrix) {
+            createFunction();
+
+            statement.execute("INSERT INTO new_C (i, j, val) " +
+                    "SELECT new_A.i, new_B.j, dotproduct(new_A.row, new_B.col) " +
+                    "FROM new_A, new_B " +
+                    "WHERE dotproduct(new_A.row, new_B.col) != 0");
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void createFunction() {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute("DROP FUNCTION IF EXISTS dotproduct(int[], int[])");
-
             statement.execute("CREATE OR REPLACE FUNCTION dotproduct(vector1 int[], vector2 int[]) RETURNS int AS $$\n" +
                     "DECLARE\n" +
                     "    result int := 0;\n" +
                     "BEGIN\n" +
-                    "    IF array_length(vector1, 1) != array_length(vector2, 1) THEN\n" +
-                    "        RAISE EXCEPTION 'Vectors must be of the same length';\n" +
-                    "    END IF;\n" +
-                    "\n" +
                     "    FOR i IN 1..array_length(vector1, 1) LOOP\n" +
                     "        result := result + vector1[i] * vector2[i];\n" +
                     "    END LOOP;\n" +
@@ -192,15 +216,6 @@ public class Effiziente_Matrixmultiplikation {
                     "    RETURN result;\n" +
                     "END;\n" +
                     "$$ LANGUAGE plpgsql;");
-
-            statement.execute("DROP TABLE IF EXISTS new_C");
-            statement.execute("CREATE TABLE new_C (i INT, j INT, val INT, PRIMARY KEY (i, j))");
-
-            statement.execute("INSERT INTO new_C (i, j, val) " +
-                    "SELECT new_A.i, new_B.j, dotproduct(new_A.row, new_B.col) " +
-                    "FROM new_A, new_B " +
-                    "WHERE dotproduct(new_A.row, new_B.col) != 0");
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

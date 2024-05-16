@@ -14,5 +14,4 @@ public class Main {
         // Auskommentieren, wenn Projekt 2 ausgeführt werden soll
         effiziente_matrixmultiplikation(args);
     }
-
 }
