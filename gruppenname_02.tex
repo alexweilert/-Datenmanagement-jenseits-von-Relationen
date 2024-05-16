@@ -71,72 +71,55 @@ Gehen Sie (kurz) auf die wesentlichen Aspekte ein.
 Die Funktion generate(int l, double sparsity) erstellt Tabellen mit der Größe l und einem sparsity.
 Beim Start werden die Tabllen A und B gelöscht und neu erstellt. 
 Die View C wird gelöscht, da sie in der Laufzeit generiert wird.
-Danach werden die Funktionen generateMatrixA(int l, double sparsity) und generateMatrixB(int l, double sparsity) aufgerufen, um Arrays für die Matrizen zu erstellen. 
-Beide Funktionen vergleichen die sparsity mit Math.random() und fügen an den entsprechenden Stellen der Matrix entweder eine zufällige Ganzzahl zwischen 1 und 11 oder 0 hinzu.
-Die Unterschiede zwischen den Funktionen liegen nur im Array-Aufbau. 
-Die Matrix wird entweder mit `int[l-1][l] matrix' oder `int[l][l-1] matrix' definiert, ebenfalls wird dies in der Schleifen- bedingung jeweils verkehrt aufgerufen.
+Danach wird die Funktion generateMatrix(int l, double sparsity) aufgerufen, um Arrays für die Matrizen zu erstellen. 
+Die Funktion vergleicht die sparsity mit Math.random() und fügt an den entsprechenden Stellen der Matrix entweder eine zufällige Ganzzahl zwischen 1 und 11 oder 0 hinzu.
+Die Matrix wird entweder mit `int[l-1][l] matrix' oder `int[l][l-1] matrix' definiert.
 Danach werden die generierten Matrizen mit insertMatrix(String tableName, int[][] matrix) in das DBMS eingefügt. 
-Die Funktionen ansatz0(int[][] matrixA, int[][] matrixB) und ansatz1() berechnen die Matrixmultiplikation für C auf unterschiedliche Weise, entweder per Algorithmus oder durch eine Selektion auf A und B. 
 
 \begin{lstlisting}[style=dmrJava]
-public void generate(int l, double sparsity) {
+public int[][][] generate(int l, double sparsity) {
     try (Statement statement = this.connection.createStatement()) {
         statement.execute("DROP VIEW IF EXISTS C");
         statement.execute("DROP TABLE IF EXISTS A, B");
         // Create Table
-        statement.execute("
-        CREATE TABLE A (i INT, j INT, val INT, PRIMARY KEY (i, j))");
-        statement.execute("
-        CREATE TABLE B (i INT, j INT, val INT, PRIMARY KEY (i, j))");
+        statement.execute("CREATE TABLE A " + 
+            "(i INT, j INT , val INT, PRIMARY KEY (i, j))");
+        statement.execute("CREATE TABLE B " + 
+            "(i INT, j INT , val INT, PRIMARY KEY (i, j))");
 
-        int[][] matrixA = generateMatrixA(l, sparsity);
-        int[][] matrixB = generateMatrixB(l, sparsity);
-        insertMatrix("A", matrixA);
-        insertMatrix("B", matrixB);
+        int[][][] matrix = new int[2][][];
+        int[][] matrixA = new int[l-1][l];
+        int[][] matrixB = new int[l][l-1];
+            
+        System.out.println("--- Matrix A ---");
+        matrix[0] = generateMatrix(matrixA, sparsity);
+        System.out.println("--- Matrix B ---");
+        matrix[1] = generateMatrix(matrixB, sparsity);
 
-        ansatz0(matrixA, matrixB); // Matrix Calculator per Algorithm
-        ansatz1();                 // Matrix Calculator per Select
+        insertMatrix("A", matrix[0]);
+        insertMatrix("B", matrix[1]);
 
+        return matrix;
     } catch (SQLException e) {
         throw new RuntimeException(e);
     }
 }
 
-public int[][] generateMatrixA(int l, double sparsity) {
+public int[][] generateMatrix(int[][] matrix, double sparsity) {
     Random random = new Random();
-    int[][] matrixA = new int[l-1][l];
-    System.out.println("--- Matrix A ---");
-    for (int i = 0; i < ( l - 1 ); i++) {
-        for (int j = 0; j < l; j++) {
+    for (int i = 0; i < matrix.length; i++) {
+        for (int j = 0; j < matrix[0].length; j++) {
             if (random.nextDouble() > sparsity) {
-                matrixA[i][j] = random.nextInt(1, 11); 
-                // Random value between 0 and 10
+                matrix[i][j] = random.nextInt(1, 11); 
+                    // Random value between 0 and 10
             } else {
-                matrixA[i][j] = 0;
+                matrix[i][j] = 0;
             }
-            System.out.print(matrixA[i][j] + " ");
+            System.out.print(matrix[i][j] + " ");
         }
         System.out.println();
     }
-    return matrixA;
-}
-
-public int[][] generateMatrixB(int l, double sparsity) {
-    Random random = new Random();
-    int[][] matrixB = new int[l][l-1];
-    System.out.println("--- Matrix B ---");
-    for (int i = 0; i < l; i++) {
-        for (int j = 0; j < (l - 1); j++) {
-            if (random.nextDouble() > sparsity) {
-                matrixB[i][j] = random.nextInt(1, 11);
-            } else {
-                matrixB[i][j] = 0;
-            }
-            System.out.print(matrixB[i][j] + " ");
-        }
-        System.out.println();
-    }
-    return matrixB;
+    return matrix;
 }
 
 public void insertMatrix(String tableName, int[][] matrix) {
@@ -168,6 +151,17 @@ Geben Sie das Create Table Statement für Matrix $A$ an.
 \begin{lstlisting}[style=dmrsql]
   CREATE TABLE A (i INT, j INT, val INT, PRIMARY KEY (i, j))
 \end{lstlisting}
+
+Die Ansicht der Primary Keys ist bei uns nicht vorhanden, da in Version 1 die Tabellen keine Primary Keys hatten.
+Die Tabellen haben in der neueren Version Primary Keys wie im unteren Bild dargestellt.
+Die kommenden Screenshots wurden nicht mehr ersetzt, da wir keinen erneuten Aufwand betreiben wollten die Rechnungen per Hand nochmals durchzuführen, weil wir nur beweisen mussten das unser System die Berechnung richtig durchführt.
+
+\begin{figure}[H]
+    \begin{center}
+        \includegraphics[width=\linewidth]{table_key.jpg}
+        \caption{Attributnamen mit Keys}
+    \end{center}
+\end{figure}
 
 Für die Übung bereiten Sie eine Demo des Datenimports vor.
 
