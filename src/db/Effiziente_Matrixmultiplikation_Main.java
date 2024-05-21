@@ -25,7 +25,7 @@ public class Effiziente_Matrixmultiplikation_Main {
     public static void benchmark(Effiziente_Matrixmultiplikation e_matrix_mult) {
         int[][][] matrix;
         System.out.println("Test 1: Extending size of Matrix:");
-        for(int i = 3; i < 10; i++) {
+        for(int i = 10; i <= 10; i++) {
             long startTime = System.currentTimeMillis();
             System.out.println("L: " + i + ", Sparsity: 0.5");
             matrix = e_matrix_mult.generate((int) Math.pow(2, i), 0.5);
@@ -33,7 +33,7 @@ public class Effiziente_Matrixmultiplikation_Main {
             e_matrix_mult.createArrayTable(matrix);
             System.out.println("Array in " + (System.currentTimeMillis() - startTime) + " ms");
             benchmark_calculation(e_matrix_mult, matrix);
-        }
+        } /*
         System.out.println("Test 2: Extending Sparsity of Matrix:");
         for(double i = 0.1; i < 0.99; i += 0.1) {
             long startTime = System.currentTimeMillis();
@@ -45,6 +45,7 @@ public class Effiziente_Matrixmultiplikation_Main {
             System.out.println("Array in " + (System.currentTimeMillis() - startTime) + " ms");
             benchmark_calculation(e_matrix_mult, matrix);
         }
+        */
     }
 
     public static void benchmark_calculation(Effiziente_Matrixmultiplikation e_matrix_mult, int[][][] matrix) {

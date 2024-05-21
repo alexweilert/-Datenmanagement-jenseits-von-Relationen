@@ -1,0 +1,361 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2023.2.23)  21 MAY 2024 20:52
+entering extended mode
+ restricted \write18 enabled.
+ file:line:error style messages enabled.
+ %&-line parsing enabled.
+**c:/Users/Weilert/Desktop/Datenmanagement-jenseits-von-Relationen/latex/pdf2_phase2/gruppenname_02_phase_2.tex
+(c:/Users/Weilert/Desktop/Datenmanagement-jenseits-von-Relationen/latex/pdf2_phase2/gruppenname_02_phase_2.tex
+LaTeX2e <2022-11-01> patch level 1
+L3 programming layer <2023-02-07> (c:/texlive/2022/texmf-dist/tex/latex/koma-script/scrartcl.cls
+Document Class: scrartcl 2022/10/12 v3.38 KOMA-Script document class (article)
+(c:/texlive/2022/texmf-dist/tex/latex/koma-script/scrkbase.sty
+Package: scrkbase 2022/10/12 v3.38 KOMA-Script package (KOMA-Script-dependent basics and keyval usage)
+ (c:/texlive/2022/texmf-dist/tex/latex/koma-script/scrbase.sty
+Package: scrbase 2022/10/12 v3.38 KOMA-Script package (KOMA-Script-independent basics and keyval usage)
+ (c:/texlive/2022/texmf-dist/tex/latex/koma-script/scrlfile.sty
+Package: scrlfile 2022/10/12 v3.38 KOMA-Script package (file load hooks)
+ (c:/texlive/2022/texmf-dist/tex/latex/koma-script/scrlfile-hook.sty
+Package: scrlfile-hook 2022/10/12 v3.38 KOMA-Script package (using LaTeX hooks)
+ (c:/texlive/2022/texmf-dist/tex/latex/koma-script/scrlogo.sty
+Package: scrlogo 2022/10/12 v3.38 KOMA-Script package (logo)
+))) (c:/texlive/2022/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
+\KV@toks@=\toks16
+)
+Applying: [2021/05/01] Usage of raw or classic option list on input line 252.
+Already applied: [0000/00/00] Usage of raw or classic option list on input line 368.
+)) (c:/texlive/2022/texmf-dist/tex/latex/koma-script/tocbasic.sty
+Package: tocbasic 2022/10/12 v3.38 KOMA-Script package (handling toc-files)
+\scr@dte@tocline@numberwidth=\skip48
+\scr@dte@tocline@numbox=\box51
+)
+Package tocbasic Info: omitting babel extension for `toc'
+(tocbasic)             because of feature `nobabel' available
+(tocbasic)             for `toc' on input line 135.
+Package scrartcl Info: You've used standard option `11pt'.
+(scrartcl)             This is correct!
+(scrartcl)             Internally I'm using `fontsize=11pt'.
+(scrartcl)             If you'd like to set the option with \KOMAoptions,
+(scrartcl)             you'd have to use `fontsize=11pt' there
+(scrartcl)             instead of `11pt', too.
+Class scrartcl Info: File `scrsize11pt.clo' used to setup font sizes on input line 2367.
+ (c:/texlive/2022/texmf-dist/tex/latex/koma-script/scrsize11pt.clo
+File: scrsize11pt.clo 2022/10/12 v3.38 KOMA-Script font size class option (11pt)
+) (c:/texlive/2022/texmf-dist/tex/latex/koma-script/typearea.sty
+Package: typearea 2022/10/12 v3.38 KOMA-Script package (type area)
+\ta@bcor=\skip49
+\ta@div=\count185
+\ta@hblk=\skip50
+\ta@vblk=\skip51
+\ta@temp=\skip52
+\footheight=\skip53
+Package typearea Info: These are the values describing the layout:
+(typearea)             DIV  = 10
+(typearea)             BCOR = 0.0pt
+(typearea)             \paperwidth      = 597.50793pt
+(typearea)              \textwidth      = 418.25555pt
+(typearea)              DIV departure   = -6%
+(typearea)              \evensidemargin = 17.3562pt
+(typearea)              \oddsidemargin  = 17.3562pt
+(typearea)             \paperheight     = 845.04694pt
+(typearea)              \textheight     = 595.80026pt
+(typearea)              \topmargin      = -25.16531pt
+(typearea)              \headheight     = 17.0pt
+(typearea)              \headsep        = 20.40001pt
+(typearea)              \topskip        = 11.0pt
+(typearea)              \footskip       = 47.6pt
+(typearea)              \baselineskip   = 13.6pt
+(typearea)              on input line 1767.
+)
+\c@part=\count186
+\c@section=\count187
+\c@subsection=\count188
+\c@subsubsection=\count189
+\c@paragraph=\count190
+\c@subparagraph=\count191
+\scr@dte@section@maxnumwidth=\skip54
+Class scrartcl Info: using compatibility default `runin=bysign'
+(scrartcl)           for `\section on input line 4994.
+Class scrartcl Info: using compatibility default `afterindent=bysign'
+(scrartcl)           for `\section on input line 4994.
+\scr@dte@part@maxnumwidth=\skip55
+Class scrartcl Info: using compatibility default `afterindent=false'
+(scrartcl)           for `\part on input line 5002.
+\scr@dte@subsection@maxnumwidth=\skip56
+Class scrartcl Info: using compatibility default `runin=bysign'
+(scrartcl)           for `\subsection on input line 5012.
+Class scrartcl Info: using compatibility default `afterindent=bysign'
+(scrartcl)           for `\subsection on input line 5012.
+\scr@dte@subsubsection@maxnumwidth=\skip57
+Class scrartcl Info: using compatibility default `runin=bysign'
+(scrartcl)           for `\subsubsection on input line 5022.
+Class scrartcl Info: using compatibility default `afterindent=bysign'
+(scrartcl)           for `\subsubsection on input line 5022.
+\scr@dte@paragraph@maxnumwidth=\skip58
+Class scrartcl Info: using compatibility default `runin=bysign'
+(scrartcl)           for `\paragraph on input line 5033.
+Class scrartcl Info: using compatibility default `afterindent=bysign'
+(scrartcl)           for `\paragraph on input line 5033.
+\scr@dte@subparagraph@maxnumwidth=\skip59
+Class scrartcl Info: using compatibility default `runin=bysign'
+(scrartcl)           for `\subparagraph on input line 5043.
+Class scrartcl Info: using compatibility default `afterindent=bysign'
+(scrartcl)           for `\subparagraph on input line 5043.
+\abovecaptionskip=\skip60
+\belowcaptionskip=\skip61
+\c@pti@nb@sid@b@x=\box52
+Package tocbasic Info: omitting babel extension for `lof'
+(tocbasic)             because of feature `nobabel' available
+(tocbasic)             for `lof' on input line 6211.
+\scr@dte@figure@maxnumwidth=\skip62
+\c@figure=\count192
+Package tocbasic Info: omitting babel extension for `lot'
+(tocbasic)             because of feature `nobabel' available
+(tocbasic)             for `lot' on input line 6227.
+\scr@dte@table@maxnumwidth=\skip63
+\c@table=\count193
+Class scrartcl Info: Redefining `\numberline' on input line 6397.
+\bibindent=\dimen140
+) (c:/texlive/2022/texmf-dist/tex/latex/geometry/geometry.sty
+Package: geometry 2020/01/02 v5.9 Page Geometry
+ (c:/texlive/2022/texmf-dist/tex/generic/iftex/ifvtex.sty
+Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
+ (c:/texlive/2022/texmf-dist/tex/generic/iftex/iftex.sty
+Package: iftex 2022/02/03 v1.0f TeX engine tests
+))
+\Gm@cnth=\count194
+\Gm@cntv=\count195
+\c@Gm@tempcnt=\count196
+\Gm@bindingoffset=\dimen141
+\Gm@wd@mp=\dimen142
+\Gm@odd@mp=\dimen143
+\Gm@even@mp=\dimen144
+\Gm@layoutwidth=\dimen145
+\Gm@layoutheight=\dimen146
+\Gm@layouthoffset=\dimen147
+\Gm@layoutvoffset=\dimen148
+\Gm@dimlist=\toks17
+) (c:/texlive/2022/texmf-dist/tex/latex/url/url.sty
+\Urlmuskip=\muskip16
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+) (c:/texlive/2022/texmf-dist/tex/latex/float/float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count197
+\float@exts=\toks18
+\float@box=\box53
+\@float@everytoks=\toks19
+\@floatcapt=\box54
+) (c:/texlive/2022/texmf-dist/tex/latex/listings/listings.sty
+\lst@mode=\count198
+\lst@gtempboxa=\box55
+\lst@token=\toks20
+\lst@length=\count199
+\lst@currlwidth=\dimen149
+\lst@column=\count266
+\lst@pos=\count267
+\lst@lostspace=\dimen150
+\lst@width=\dimen151
+\lst@newlines=\count268
+\lst@lineno=\count269
+\lst@maxwidth=\dimen152
+ (c:/texlive/2022/texmf-dist/tex/latex/listings/lstmisc.sty
+File: lstmisc.sty 2020/03/24 1.8d (Carsten Heinz)
+\c@lstnumber=\count270
+\lst@skipnumbers=\count271
+\lst@framebox=\box56
+) (c:/texlive/2022/texmf-dist/tex/latex/listings/listings.cfg
+File: listings.cfg 2020/03/24 1.8d listings configuration
+))
+Package: listings 2020/03/24 1.8d (Carsten Heinz)
+ (c:/texlive/2022/texmf-dist/tex/latex/xcolor/xcolor.sty
+Package: xcolor 2022/06/12 v2.14 LaTeX color extensions (UK)
+ (c:/texlive/2022/texmf-dist/tex/latex/graphics-cfg/color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package xcolor Info: Driver file: pdftex.def on input line 227.
+ (c:/texlive/2022/texmf-dist/tex/latex/graphics-def/pdftex.def
+File: pdftex.def 2022/09/22 v1.2b Graphics/color driver for pdftex
+) (c:/texlive/2022/texmf-dist/tex/latex/graphics/mathcolor.ltx)
+Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1353.
+Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1357.
+Package xcolor Info: Model `RGB' extended on input line 1369.
+Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1371.
+Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1372.
+Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1373.
+Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1374.
+Package xcolor Info: Model `Gray' substituted by `gray' on input line 1375.
+Package xcolor Info: Model `wave' substituted by `hsb' on input line 1376.
+) (c:/texlive/2022/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 2021/09/16 v1.2d Enhanced LaTeX Graphics (DPC,SPQR)
+ (c:/texlive/2022/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2022/03/10 v1.4e Standard LaTeX Graphics (DPC,SPQR)
+ (c:/texlive/2022/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 2021/08/11 v1.11 sin cos tan (DPC)
+) (c:/texlive/2022/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: pdftex.def on input line 107.
+)
+\Gin@req@height=\dimen153
+\Gin@req@width=\dimen154
+) (c:/texlive/2022/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
+File: l3backend-pdftex.def 2023-01-16 L3 backend support: PDF output (pdfTeX)
+\l__color_backend_stack_int=\count272
+\l__pdf_internal_box=\box57
+) (./gruppenname_02_phase_2.aux)
+\openout1 = `gruppenname_02_phase_2.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 46.
+Package scrbase Info: activating english \abstractname on input line 46.
+Package scrbase Info: activating english \partname on input line 46.
+Package scrbase Info: activating english \figurename on input line 46.
+Package scrbase Info: activating english \tablename on input line 46.
+Package scrbase Info: activating english \contentsname on input line 46.
+Package scrbase Info: activating english \listfigurename on input line 46.
+Package scrbase Info: activating english \listtablename on input line 46.
+Package scrbase Info: activating english \refname on input line 46.
+Package scrbase Info: activating english \indexname on input line 46.
+
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+*geometry* verbose mode - [ preamble ] result:
+* driver: pdftex
+* paper: <default>
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: 
+* h-part:(L,W,R)=(89.6271pt, 418.25372pt, 89.6271pt)
+* v-part:(T,H,B)=(42.67912pt, 700.96117pt, 101.40665pt)
+* \paperwidth=597.50793pt
+* \paperheight=845.04694pt
+* \textwidth=418.25372pt
+* \textheight=700.96117pt
+* \oddsidemargin=17.35712pt
+* \evensidemargin=17.35712pt
+* \topmargin=-66.99088pt
+* \headheight=17.0pt
+* \headsep=20.40001pt
+* \topskip=11.0pt
+* \footskip=47.6pt
+* \marginparwidth=59.7508pt
+* \marginparsep=12.8401pt
+* \columnsep=10.0pt
+* \skip\footins=10.0pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidefalse
+* \@mparswitchfalse
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+\c@lstlisting=\count273
+(c:/texlive/2022/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count274
+\scratchdimen=\dimen155
+\scratchbox=\box58
+\nofMPsegments=\count275
+\nofMParguments=\count276
+\everyMPshowfont=\toks21
+\MPscratchCnt=\count277
+\MPscratchDim=\dimen156
+\MPnumerator=\count278
+\makeMPintoPDFobject=\count279
+\everyMPtoPDFconversion=\toks22
+) (c:/texlive/2022/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 485.
+ (c:/texlive/2022/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
+))
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <14.4> on input line 48.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 48.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <10.95> on input line 54.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 54.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 54.
+ (c:/texlive/2022/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2020/03/24 1.8d listings language file
+)
+<Tabelle_new_A.png, id=1, 243.91125pt x 92.59593pt>
+File: Tabelle_new_A.png Graphic file (type png)
+<use Tabelle_new_A.png>
+Package pdftex.def Info: Tabelle_new_A.png  used on input line 65.
+(pdftex.def)             Requested size: 167.29893pt x 63.51259pt.
+<Tabelle_new_B.png, id=3, 244.66406pt x 90.3375pt>
+File: Tabelle_new_B.png Graphic file (type png)
+<use Tabelle_new_B.png>
+Package pdftex.def Info: Tabelle_new_B.png  used on input line 72.
+(pdftex.def)             Requested size: 167.29893pt x 61.77328pt.
+
+Overfull \hbox (10.14545pt too wide) in paragraph at lines 90--91
+[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
+ []
+
+[1
+
+
+{c:/texlive/2022/texmf-var/fonts/map/pdftex/updmap/pdftex.map} <./Tabelle_new_A.png> <./Tabelle_new_B.png>]
+Overfull \hbox (47.94537pt too wide) in paragraph at lines 100--101
+[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
+ []
+
+LaTeX Font Info:    Trying to load font information for TS1+cmtt on input line 102.
+(c:/texlive/2022/texmf-dist/tex/latex/base/ts1cmtt.fd
+File: ts1cmtt.fd 2022/07/10 v2.5l Standard LaTeX font definitions
+)
+Overfull \hbox (35.3454pt too wide) in paragraph at lines 102--103
+[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
+ []
+
+<Tabelle_new_c.png, id=16, 289.08pt x 250.68657pt>
+File: Tabelle_new_c.png Graphic file (type png)
+<use Tabelle_new_c.png>
+Package pdftex.def Info: Tabelle_new_c.png  used on input line 124.
+(pdftex.def)             Requested size: 167.29893pt x 145.07698pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 125--125
+[][]\OT1/cmr/m/n/10.95 Tabelle new $[]$ nach
+ []
+
+<View_C_im_Vergleich.png, id=17, 289.83281pt x 255.95625pt>
+File: View_C_im_Vergleich.png Graphic file (type png)
+<use View_C_im_Vergleich.png>
+Package pdftex.def Info: View_C_im_Vergleich.png  used on input line 131.
+(pdftex.def)             Requested size: 167.29893pt x 147.7439pt.
+[2 <./Tabelle_new_c.png> <./View_C_im_Vergleich.png>] [3] (./gruppenname_02_phase_2.aux) ) 
+Here is how much of TeX's memory you used:
+ 7360 strings out of 476029
+ 136327 string characters out of 5794164
+ 1883340 words of memory out of 5000000
+ 27766 multiletter control sequences out of 15000+600000
+ 518365 words of font info for 53 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 108i,10n,106p,10700b,1654s stack positions out of 10000i,1000n,20000p,200000b,200000s
+{c:/texlive/2022/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}<c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmssbx10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb><c:/texlive/2022/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb>
+Output written on gruppenname_02_phase_2.pdf (3 pages, 151584 bytes).
+PDF statistics:
+ 74 PDF objects out of 1000 (max. 8388607)
+ 40 compressed objects within 1 object stream
+ 0 named destinations out of 1000 (max. 500000)
+ 21 words of extra memory for PDF output out of 10000 (max. 10000000)
+
