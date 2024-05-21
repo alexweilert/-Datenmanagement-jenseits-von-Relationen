@@ -38,9 +38,9 @@
 }
 
 \author{
-  Gruppen Nummer (e.g. A1, B5, B3) \\
-  \large Lastname1 Firstname1, StudentID1 \\
-  \large Lastname2 Firstname2, StudentID2 
+  Gruppen Nummer 8 \\
+  \large Weilert Alexander, 12119653 \\
+  \large Jovanovic Dragana, 11850325
 }
 
 \begin{document}
@@ -122,7 +122,7 @@ Wird korrekt berechnet, da die Ergebnisse übereinstimmen. Siehe Screenshots.
   \begin{minipage}[b]{.4\linewidth}
     \begin{center}
       \includegraphics[width=\linewidth]{Tabelle_new_c.png}
-      \caption{Tabelle new \underline C nach Ansatz2}
+      \caption{Tabelle newC nach dem Ansatz2}
     \end{center}
   \end{minipage}
   \hspace{.1\linewidth}
@@ -132,7 +132,6 @@ Wird korrekt berechnet, da die Ergebnisse übereinstimmen. Siehe Screenshots.
       \caption{View C aus Ansatz1 zum Vergleich}
     \end{center}
   \end{minipage}
-	\label{fig:}
 \end{figure}
 
 \subsection*{Benchmark Definition (0.5 P):}
@@ -142,31 +141,61 @@ Wird korrekt berechnet, da die Ergebnisse übereinstimmen. Siehe Screenshots.
 		\begin{center}
 			\begin{tabular}{ c c c }
 				Parameter & Interval & Kommentar\\
-				L & 2$^{(n + 1)}$ & 3 $\leq$ n $\leq$ 10 \\
-				S & $((n + 1) \times 0.1)$ & 0 $\leq$ n $\leq$ 8 \\
+				L & 2 $\leq$ n $\leq$ 10 & 2$^{(n + 1)}$  \\
+				S & 0 $\leq$ n $\leq$ 8 & $((n + 1) \times 0.1)$ \\                     
 			\end{tabular}
 			\end{center}
 	\caption{Getestet Matrixgrößen L und sparsity Werte S}
 	\label{tab:MatrixgrößenLUndSparsityWerteS}
 \end{table}
-
-\youranswerhere{}
+Speicherkapazitäten wurden berücksichtigt und Sparsity wurde mit niedrigen Werte getestet.  
 
 \subsubsection*{Auswertung (0.5 P)}
 
 Stellen Sie Ihre Messergebnisse grafisch dar. 
 
-\begin{figure}
-	\centering
-
-	\caption{Fügen Sie Ihre Resultate als Grafik ein}
-	\label{fig:results}
+\begin{figure}[H]
+  \includegraphics[width=\linewidth]{Testdaten.png}
+  \caption{Messdaten}
 \end{figure}
 
+Benchmark Laufzeit:
+\begin{figure}[H]
+  \begin{minipage}[b]{.4\linewidth}
+    \begin{center}
+      \includegraphics[width=\linewidth]{laufzeit_l.png}
+      \caption{L wird erhöht} 
+    \end{center}
+  \end{minipage}
+  \hspace{.1\linewidth}
+  \begin{minipage}[b]{.4\linewidth}
+    \begin{center}
+      \includegraphics[width=\linewidth]{laufzeit_spar.png}
+      \caption{Sparsity wird erhöht}
+    \end{center}
+  \end{minipage}      
+\end{figure}
+
+Benchmark Anzahl max. Iterationen innerhalb 1er Minute:
+\begin{figure}[H]
+  \begin{minipage}[b]{.4\linewidth}
+    \begin{center}
+      \includegraphics[width=\linewidth]{anz_iter_l.png}
+      \caption{Erhöhung von L}
+    \end{center}
+  \end{minipage}
+  \hspace{.1\linewidth}
+  \begin{minipage}[b]{.4\linewidth}
+    \begin{center}
+      \includegraphics[width=\linewidth]{anz_iter_spar.png}
+      \caption{Erhöhung von Sparsity}
+    \end{center}
+  \end{minipage}
+\end{figure}
 
 \subsection*{Zeitmamagement}
 
-Benötigte Zeit pro Person (nur Phase 1): \textbf{5h}
+Benötigte Zeit pro Person (nur Phase 1): \textbf{6h}
 
 \subsection*{References}
 
