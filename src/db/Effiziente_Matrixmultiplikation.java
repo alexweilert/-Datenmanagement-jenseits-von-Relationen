@@ -85,9 +85,6 @@ public class Effiziente_Matrixmultiplikation {
 
     public void ansatz0(int[][][] matrix) {
         try (Statement statement = this.connection.createStatement()) {
-            long max_time = System.currentTimeMillis() + 60000;
-            long counter = 0;
-            boolean time_over = false;
             int[][] matrixA = matrix[0];
             int[][] matrixB = matrix[1];
             statement.execute("DROP TABLE IF EXISTS matrix_algorithm");
@@ -99,19 +96,11 @@ public class Effiziente_Matrixmultiplikation {
                 for (int j = 0; j < matrixB[0].length; j++) {
                     for (int k = 0; k < matrixA[0].length; k++) {
                         result[i][j] += matrixA[i][k] * matrixB[k][j];
-                        counter++;
-                        if(System.currentTimeMillis() >= max_time && System.currentTimeMillis() <= max_time+300 && !time_over){
-                            time_over = true;
-                            System.out.println("In 1 Minute we got " + counter + " calculations");
-                        }
                     }
                     insertQuery.append("(").append(i + 1).append(",").append(j + 1).append(",").append(result[i][j]).append("),");
                     //System.out.print(result[i][j] + " ");
                 }
                 //System.out.println();
-            }
-            if(!time_over) {
-                System.out.println("In " + (System.currentTimeMillis() - max_time + 60000) + " we got " + counter + " calculations");
             }
             insertQuery.deleteCharAt(insertQuery.length() - 1);
             statement.executeUpdate(insertQuery.toString());
@@ -122,12 +111,10 @@ public class Effiziente_Matrixmultiplikation {
 
     public void ansatz1() {
         try (Statement statement = this.connection.createStatement()) {
-            statement.execute("CREATE VIEW C AS " +
-                    "SELECT a.i, b.j, SUM(A.val * B.val) " +
+            statement.executeQuery("SELECT a.i, b.j, SUM(A.val * B.val) " +
                     "FROM a,  b " +
                     "WHERE a.j = b.i " +
                     "GROUP BY a.i, b.j");
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -187,16 +174,9 @@ public class Effiziente_Matrixmultiplikation {
 
     public void ansatz2() {
         try (Statement statement = this.connection.createStatement()) {
-            statement.execute("DROP TABLE IF EXISTS new_C");
-            statement.execute("CREATE TABLE new_C (i INT, j INT, val INT, PRIMARY KEY (i, j))");
-
-            createFunction();
-
-            statement.execute("INSERT INTO new_C (i, j, val) " +
-                    "SELECT new_A.i, new_B.j, dotproduct(new_A.row, new_B.col) " +
+            statement.executeQuery("SELECT new_A.i, new_B.j, dotproduct(new_A.row, new_B.col) " +
                     "FROM new_A, new_B " +
                     "WHERE dotproduct(new_A.row, new_B.col) != 0");
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
