@@ -14,7 +14,7 @@ public class Effiziente_Matrixmultiplikation {
 
     public boolean openConnection() throws SQLException, ClassNotFoundException {
         Class.forName("org.postgresql.Driver");
-        this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "dragi");
+        this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "alex");
         return !isConnectionClosed();
     }
 

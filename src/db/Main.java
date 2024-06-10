@@ -2,8 +2,9 @@ package db;
 
 import java.sql.SQLException;
 
+import static db.Berechnung_XPath_Achsen_Main.berechnung_xpath_achsen_main;
 import static db.Effiziente_Matrixmultiplikation_Main.*;
-//import static db.Sparsity_Main.*;
+import static db.Sparsity_Main.*;
 
 public class Main {
 
@@ -12,6 +13,9 @@ public class Main {
         // sparsity_in_ecommerce(args);
 
         // Auskommentieren, wenn Projekt 2 ausgeführt werden soll
-        effiziente_matrixmultiplikation(args);
+        // effiziente_matrixmultiplikation(args);
+
+        // Auskommentieren, wenn Projekt 3 ausgeführt werden soll
+        berechnung_xpath_achsen_main(args);
     }
 }

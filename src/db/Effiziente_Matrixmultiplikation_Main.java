@@ -4,7 +4,7 @@ import java.sql.SQLException;
 
 public class Effiziente_Matrixmultiplikation_Main {
     
-    public static void  effiziente_matrixmultiplikation(String[] args) throws SQLException, ClassNotFoundException {
+    public static void effiziente_matrixmultiplikation(String[] args) throws SQLException, ClassNotFoundException {
         Effiziente_Matrixmultiplikation e_matrix_mult = new Effiziente_Matrixmultiplikation();
         int[][][] matrix;
         e_matrix_mult.openConnection();
