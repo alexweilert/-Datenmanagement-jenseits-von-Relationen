@@ -4,27 +4,37 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import java.util.ArrayList;
 import java.util.List;
 class SAXHandler extends DefaultHandler {
     private List<Publication> publications;
     private Publication currentPublication;
     private StringBuilder content;
 
-    public SAXHandler(List<Publication> publications) {
+    public SAXHandler(List<Publication> publications, List<Node> nodes, List<Edge> edges) {
         this.publications = publications;
         this.content = new StringBuilder();
     }
 
-    @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes){
         if (qName.equalsIgnoreCase("article") || qName.equalsIgnoreCase("inproceedings")) {
             currentPublication = new Publication();
             currentPublication.type = qName;
+            switch(qName.toLowerCase()) {
+                case "inproceedings":
+                    currentPublication.venue = attributes.getValue(1).split("/")[1];
+                    currentPublication.article = attributes.getValue(1).split("/")[2];
+                    break;
+                case "article":
+                    currentPublication.bib = "bib";
+                    currentPublication.venue = attributes.getValue(1).split("/")[1];
+                    currentPublication.article = attributes.getValue(1).split("/")[2];
+                    break;
+            }
         }
         content.setLength(0); // Clear content buffer
     }
 
-    @Override
     public void endElement(String uri, String localName, String qName) {
         if (currentPublication != null) {
             switch (qName.toLowerCase()) {
@@ -52,7 +62,6 @@ class SAXHandler extends DefaultHandler {
                     break;
                 case "number":
                     currentPublication.number = content.toString();
-                    break;
                 case "ee":
                     currentPublication.ee = content.toString();
                     break;
@@ -61,8 +70,10 @@ class SAXHandler extends DefaultHandler {
                     break;
                 case "year":
                     currentPublication.year = content.toString();
+                    currentPublication.venue_year = currentPublication.venue + "_" + content.toString();
                     break;
                 case "article":
+
                 case "inproceedings":
                     publications.add(currentPublication);
                     break;
@@ -70,7 +81,6 @@ class SAXHandler extends DefaultHandler {
         }
     }
 
-    @Override
     public void characters(char[] ch, int start, int length) {
         content.append(new String(ch, start, length));
     }
