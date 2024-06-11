@@ -22,6 +22,8 @@ public class Berechnung_XPath_Achsen_Main {
 
             bxpam.insertData(transformedData);
 
+            bxpam.createFunctionXPathInEdgeModel();
+
             bxpam.verifyImport();
 
             bxpam.closeConnection();

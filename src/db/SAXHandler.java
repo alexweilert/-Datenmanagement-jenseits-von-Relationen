@@ -20,16 +20,20 @@ class SAXHandler extends DefaultHandler {
         if (qName.equalsIgnoreCase("article") || qName.equalsIgnoreCase("inproceedings")) {
             currentPublication = new Publication();
             currentPublication.type = qName;
+            String[] parts = attributes.getValue(1).split("/");
             switch(qName.toLowerCase()) {
-                case "inproceedings":
-                    currentPublication.venue = attributes.getValue(1).split("/")[1];
+                case "inproceedings", "article":
+                    if (parts[0].equals("journals") && parts[1].equals("pacmmod")) {
+                        currentPublication.venue = "sigmod";
+                    } else if (parts[0].equals("journals") && parts[1].equals("pvldb")) {
+                        currentPublication.venue = "vldb";
+                    } else {
+                        currentPublication.venue = attributes.getValue(1).split("/")[1];
+                    }
                     currentPublication.article = attributes.getValue(1).split("/")[2];
                     break;
-                case "article":
-                    currentPublication.bib = "bib";
-                    currentPublication.venue = attributes.getValue(1).split("/")[1];
-                    currentPublication.article = attributes.getValue(1).split("/")[2];
-                    break;
+
+
             }
         }
         content.setLength(0); // Clear content buffer
