@@ -11,29 +11,30 @@ class SAXHandler extends DefaultHandler {
     private Publication currentPublication;
     private StringBuilder content;
 
-    public SAXHandler(List<Publication> publications, List<Node> nodes, List<Edge> edges) {
+    public SAXHandler(List<Publication> publications) {
         this.publications = publications;
         this.content = new StringBuilder();
     }
 
     public void startElement(String uri, String localName, String qName, Attributes attributes){
-        if (qName.equalsIgnoreCase("article") || qName.equalsIgnoreCase("inproceedings")) {
-            currentPublication = new Publication();
-            currentPublication.type = qName;
+        if (qName.equalsIgnoreCase("article") || qName.equalsIgnoreCase("inproceedings") || qName.equalsIgnoreCase("incollection")) {
             String[] parts = attributes.getValue(1).split("/");
+            String venue;
+            String article;
+            if (parts[0].equals("journals") && parts[1].equals("pacmmod")) {
+                venue = "sigmod";
+            } else if (parts[0].equals("journals") && parts[1].equals("pvldb")) {
+                venue = "vldb";
+            } else {
+                venue = attributes.getValue(1).split("/")[1];
+            }
+            article = attributes.getValue(1).split("/")[2];
+
             switch(qName.toLowerCase()) {
-                case "inproceedings", "article":
-                    if (parts[0].equals("journals") && parts[1].equals("pacmmod")) {
-                        currentPublication.venue = "sigmod";
-                    } else if (parts[0].equals("journals") && parts[1].equals("pvldb")) {
-                        currentPublication.venue = "vldb";
-                    } else {
-                        currentPublication.venue = attributes.getValue(1).split("/")[1];
-                    }
-                    currentPublication.article = attributes.getValue(1).split("/")[2];
+                case "article", "inproceedings", "incollection":
+                    currentPublication = new Publication(attributes.getValue("key"), venue, article);
+                    currentPublication.type = qName;
                     break;
-
-
             }
         }
         content.setLength(0); // Clear content buffer
@@ -42,9 +43,6 @@ class SAXHandler extends DefaultHandler {
     public void endElement(String uri, String localName, String qName) {
         if (currentPublication != null) {
             switch (qName.toLowerCase()) {
-                case "title":
-                    currentPublication.title = content.toString();
-                    break;
                 case "author":
                     if (currentPublication.author == null) {
                         currentPublication.author = content.toString();
@@ -52,33 +50,42 @@ class SAXHandler extends DefaultHandler {
                         currentPublication.author += ", " + content.toString();
                     }
                     break;
-                case "pages":
-                    currentPublication.pages = content.toString();
+                case "booktitle":
+                    currentPublication.booktitle = content.toString();
                     break;
-                case "volume":
-                    currentPublication.volume = content.toString();
+                case "crossref":
+                    currentPublication.crossref = content.toString();
+                case "ee":
+                    if (currentPublication.ee == null) {
+                        currentPublication.ee = content.toString();
+                    } else {
+                        currentPublication.ee += ", " + content.toString();
+                    }
                     break;
                 case "journal":
                     currentPublication.journal = content.toString();
                     break;
-                case "booktitle":
-                    currentPublication.booktitle = content.toString();
-                    break;
                 case "number":
                     currentPublication.number = content.toString();
-                case "ee":
-                    currentPublication.ee = content.toString();
+                    break;
+                case "pages":
+                    currentPublication.pages = content.toString();
+                    break;
+                case "title":
+                    currentPublication.title = content.toString();
                     break;
                 case "url":
                     currentPublication.url = content.toString();
+                    break;
+                case "volume":
+                    currentPublication.volume = content.toString();
                     break;
                 case "year":
                     currentPublication.year = content.toString();
                     currentPublication.venue_year = currentPublication.venue + "_" + content.toString();
                     break;
-                case "article":
 
-                case "inproceedings":
+                case "article", "inproceedings", "incollection":
                     publications.add(currentPublication);
                     break;
             }

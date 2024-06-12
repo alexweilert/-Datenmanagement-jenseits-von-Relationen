@@ -24,8 +24,6 @@ public class Berechnung_XPath_Achsen_Main {
 
             bxpam.createFunctionXPathInEdgeModel();
 
-            bxpam.verifyImport();
-
             bxpam.closeConnection();
 
         } catch (Exception e) {

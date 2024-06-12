@@ -3,7 +3,7 @@ package db;
 import java.util.List;
 
 public class Publication {
-    String bib;
+    String key;
     String type;
     String venue;
     String venue_year;
@@ -17,5 +17,20 @@ public class Publication {
     String booktitle;
     String number;
     String ee;
+    String crossref;
     String url;
+
+
+    public Publication(String key, String venue,  String article) {
+        this.key = key;
+        this.venue = venue;
+        this.article = article;
+    }
+
+    public int insertIntoNode(int id, Publication pub){
+
+
+
+        return id;
+    }
 }
