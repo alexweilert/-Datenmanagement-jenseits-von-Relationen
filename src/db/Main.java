@@ -9,13 +9,13 @@ import static db.Sparsity_Main.*;
 public class Main {
 
     public static void main(String[] args) throws SQLException, ClassNotFoundException {
-        // Auskommentieren, wenn Projekt 1 ausgeführt werden soll
+        // Auskommentieren, um Projekt 1 auszuführen
         // sparsity_in_ecommerce(args);
 
-        // Auskommentieren, wenn Projekt 2 ausgeführt werden soll
+        // Auskommentieren, um Projekt 2 auszuführen
         // effiziente_matrixmultiplikation(args);
 
-        // Auskommentieren, wenn Projekt 3 ausgeführt werden soll
+        // Auskommentieren, um Projekt 3 auszuführen
         berechnung_xpath_achsen_main(args);
     }
 }
