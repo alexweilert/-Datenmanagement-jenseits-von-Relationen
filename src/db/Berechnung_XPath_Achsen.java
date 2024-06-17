@@ -7,7 +7,6 @@ import java.io.*;
 import java.sql.*;
 import java.util.*;
 
-
 public class Berechnung_XPath_Achsen {
     Connection connection;
 
@@ -34,14 +33,156 @@ public class Berechnung_XPath_Achsen {
         String line;
 
         while ((line = reader.readLine()) != null) {
-            line = line.replace("&uuml;", "ü");
-            line = line.replace("&auml;", "ä");
-            line = line.replace("&ouml;", "ö");
+            line = replace(line);
             writer.write(line + "\n");
         }
 
         reader.close();
         writer.close();
+    }
+
+    public void preprocessXMLFile(String inputFilePath, String outputFilePath, String venueList) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(inputFilePath));
+        FileWriter writer = new FileWriter(outputFilePath);
+        String line;
+        writer.write("<bib>\n");
+        boolean isInsidePublication = true;
+        boolean initial = false;
+        while ((line = reader.readLine()) != null) {
+            line = replace(line);
+            if(initial && ( line.equals("</proceedings>") || line.equals("</inproceedings>") || line.equals("</article>")) ) {
+                writer.write(line + "\n");
+                initial = false;
+            }
+            else if (line.contains("key=")) {
+                if(initial && line.contains("><")) {
+                    String splitter = line.split("><")[0] + ">";
+                    writer.write( splitter + "\n");
+                    initial = false;
+                }
+                if(isImportant(line, venueList)) {
+                    if(line.contains("><") && isInsidePublication) {
+                        String splitter = "<" + line.split("><")[1];
+                        writer.write(splitter + "\n");
+                        isInsidePublication = false;
+                    }
+                    else writer.write(line + "\n");
+
+                    while ((line = reader.readLine()) != null) {
+                        line = replace(line);
+                        writer.write(line + "\n");
+                        if (line.contains("url")) {
+                            isInsidePublication = true;
+                            initial = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        writer.write("</bib>");
+        reader.close();
+        writer.close();
+    }
+
+    public String replace(String line) {
+        line = line.replace("&Agrave;", "À");
+        line = line.replace("&Aacute;", "Á");
+        line = line.replace("&Acirc;", "Â");
+        line = line.replace("&Atilde;", "Ã");
+        line = line.replace("&Auml;", "Ä");
+        line = line.replace("&Aring;", "Å");
+        line = line.replace("&AElig;", "Æ");
+        line = line.replace("&Ccedil;", "Ç");
+        line = line.replace("&Egrave;", "È");
+        line = line.replace("&Eacute;", "É");
+        line = line.replace("&Ecirc;", "Ê");
+        line = line.replace("&Euml;", "Ë");
+        line = line.replace("&Igrave;", "Ì");
+        line = line.replace("&Iacute;", "Í");
+        line = line.replace("&Icirc;", "Î");
+        line = line.replace("&Iuml;", "Ï");
+        line = line.replace("&ETH;", "Ð");
+        line = line.replace("&Ntilde;", "Ñ");
+        line = line.replace("&Ograve;", "Ò");
+        line = line.replace("&Oacute;", "Ó");
+        line = line.replace("&Ocirc;", "Ô");
+        line = line.replace("&Otilde;", "Õ");
+        line = line.replace("&Ouml;", "Ö");
+        line = line.replace("&Oslash;", "Ø");
+        line = line.replace("&Ugrave;", "Ù");
+        line = line.replace("&Uacute;", "Ú");
+        line = line.replace("&Ucirc;", "Û");
+        line = line.replace("&Uuml;", "Ü");
+        line = line.replace("&Yacute;", "Ý");
+        line = line.replace("&THORN;", "Þ");
+        line = line.replace("&szlig;", "ß");
+        line = line.replace("&agrave;", "à");
+        line = line.replace("&aacute;", "á");
+        line = line.replace("&acirc;", "â");
+        line = line.replace("&atilde;", "ã");
+        line = line.replace("&auml;", "ä");
+        line = line.replace("&aring;", "å");
+        line = line.replace("&aelig;", "æ");
+        line = line.replace("&ccedil;", "ç");
+        line = line.replace("&egrave;", "è");
+        line = line.replace("&eacute;", "é");
+        line = line.replace("&ecirc;", "ê");
+        line = line.replace("&euml;", "ë");
+        line = line.replace("&igrave;", "ì");
+        line = line.replace("&iacute;", "í");
+        line = line.replace("&icirc;", "î");
+        line = line.replace("&iuml;", "ï");
+        line = line.replace("&eth;", "ð");
+        line = line.replace("&ntilde;", "ñ");
+        line = line.replace("&ograve;", "ò");
+        line = line.replace("&oacute;", "ó");
+        line = line.replace("&ocirc;", "ô");
+        line = line.replace("&otilde;", "õ");
+        line = line.replace("&ouml;", "ö");
+        line = line.replace("&oslash;", "ø");
+        line = line.replace("&ugrave;", "ù");
+        line = line.replace("&uacute;", "ú");
+        line = line.replace("&ucirc;", "û");
+        line = line.replace("&uuml;", "ü");
+        line = line.replace("&yacute;", "ý");
+        line = line.replace("&thorn;", "þ");
+        line = line.replace("&yuml;", "ÿ");
+        line = line.replace("&amp;", "and");
+        line = line.replace("&lt;", "<");
+        line = line.replace("&gt;", ">");
+        line = line.replace("&reg;", "®");
+        line = line.replace("&micro;", "µ");
+        line = line.replace("&times;", "×");
+        return line;
+    }
+
+    public boolean isImportant(String line, String venueList) {
+        String[] venues = venueList.split(",");
+        if (line.contains("key")) {
+            for (int i = 0; i < venues.length; i++) {
+                if (venues[i].toLowerCase().equals("sigmod")) {
+                    if (line.contains("journals/pacmmod/")) {
+                        return true;
+                    }
+                    if (line.contains("conf/sigmod/")) {
+                        return true;
+                    }
+                } else if (venues[i].toLowerCase().contains("vldb")) {
+                    if (line.contains("journals/pvldb/")) {
+                        return true;
+                    }
+                    if (line.contains("conf/vldb/")) {
+                        return true;
+                    }
+                } else if (venues[i].toLowerCase().contains("icde")) {
+                    if (line.contains("conf/icde/")) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public List<Publication> parseXMLFile(String filePath) throws Exception {
@@ -291,14 +432,14 @@ public class Berechnung_XPath_Achsen {
     private void createPreceedingSiblings (){
         try (Statement statement = this.connection.createStatement()) {
             statement.execute("CREATE OR REPLACE FUNCTION get_preceeding_siblings(v INT) " +
-                        "RETURNS TABLE(prec_sibl INT) AS $$ " +
-                        "BEGIN RETURN QUERY " +
-                        "SELECT n2.id FROM node n1 " +
-                        "JOIN edge e1 ON n1.id = e1.childs " +
-                        "JOIN edge e2 ON e1.parents = e2.parents " +
-                        "JOIN node n2 ON e2.childs = n2.id " +
-                        "WHERE n1.id = v AND e2.childs != v AND n2.id < n1.id; " +
-                        "END; $$ LANGUAGE plpgsql;");
+                    "RETURNS TABLE(prec_sibl INT) AS $$ " +
+                    "BEGIN RETURN QUERY " +
+                    "SELECT n2.id FROM node n1 " +
+                    "JOIN edge e1 ON n1.id = e1.childs " +
+                    "JOIN edge e2 ON e1.parents = e2.parents " +
+                    "JOIN node n2 ON e2.childs = n2.id " +
+                    "WHERE n1.id = v AND e2.childs != v AND n2.id < n1.id; " +
+                    "END; $$ LANGUAGE plpgsql;");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
