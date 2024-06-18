@@ -6,6 +6,7 @@ import org.xml.sax.XMLReader;
 import java.io.*;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Berechnung_XPath_Achsen {
     Connection connection;
@@ -263,26 +264,6 @@ public class Berechnung_XPath_Achsen {
         return sortedData;
     }
 
-    public void createTables(){
-        try (Statement statement = this.connection.createStatement()) {
-
-            statement.execute("DROP TABLE IF EXISTS node, edge, accel, content, attribute");
-
-            statement.execute("CREATE TABLE node (id int ,s_id TEXT, type TEXT, content TEXT)");
-
-            statement.execute("CREATE TABLE edge (parents INT, childs INT)");
-
-            statement.execute("CREATE TABLE IF NOT EXISTS accel (pre INT, post INT, parent INT, " +
-                                                                    "kind VARCHAR(255), name VARCHAR(255))");
-
-            statement.execute("CREATE TABLE IF NOT EXISTS content (pre INT, text TEXT)");
-
-            statement.execute("CREATE TABLE IF NOT EXISTS attribute (pre INT, text TEXT)");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public void insertData(Map<String, Map<String, List<Publication>>> data) throws Exception {
         try (Statement statement = this.connection.createStatement()) {
             int parent = 0;
@@ -321,7 +302,7 @@ public class Berechnung_XPath_Achsen {
                     String venue_year = venue + "_" + year;
                     nodeStmt.setInt(1, id);
                     nodeStmt.setString(2, venue_year);
-                    nodeStmt.setString(3, "year");
+                    nodeStmt.setString(3, "v_year");
                     nodeStmt.setString(4, null);
                     nodeStmt.executeUpdate();
 
@@ -392,178 +373,295 @@ public class Berechnung_XPath_Achsen {
         }
     }
 
-    public void insertIntoNode(int id, String s_id, String type, String content){
-        try (Statement statement = this.connection.createStatement()) {
-            PreparedStatement nodeStmt = this.connection.prepareStatement("INSERT INTO node (id, s_id, type, content) VALUES (?, ?, ?, ?)");
+    public void insertIntoNode(int id, String s_id, String type, String content) throws SQLException {
+        PreparedStatement nodeStmt = this.connection.prepareStatement("INSERT INTO node (id, s_id, type, content) VALUES (?, ?, ?, ?)");
+        nodeStmt.setInt(1, id);
+        nodeStmt.setString(2, s_id);
+        nodeStmt.setString(3, type);
+        nodeStmt.setString(4, content);
+        nodeStmt.executeUpdate();
+    }
 
-            nodeStmt.setInt(1, id);
-            nodeStmt.setString(2, s_id);
-            nodeStmt.setString(3, type);
-            nodeStmt.setString(4, content);
-            nodeStmt.executeUpdate();
+    public int insertIntoEdge(int parent, int children) throws SQLException {
+        PreparedStatement edgeStmt = this.connection.prepareStatement("INSERT INTO edge (parents, childs) VALUES (?, ?)");
+        children++;
+
+        edgeStmt.setInt(1, parent);
+        edgeStmt.setInt(2, children);
+        edgeStmt.executeUpdate();
+        return children;
+    }
+
+    public void createTables(){
+        try (Statement statement = this.connection.createStatement()) {
+
+            statement.execute("DROP INDEX IF EXISTS idx_accel_parent, idx_accel_pre, idx_edge_parents, idx_edge_childs");
+            statement.execute("DROP TABLE IF EXISTS node, edge, accel, content, attribute");
+
+            statement.execute("CREATE TABLE IF NOT EXISTS node (id int ,s_id TEXT, type TEXT, content TEXT)");
+
+            statement.execute("CREATE TABLE IF NOT EXISTS edge (parents INT, childs INT)");
+
+            statement.execute("CREATE TABLE IF NOT EXISTS accel (id INT PRIMARY KEY, post INT," +
+                                            " s_id TEXT, parent INT, type TEXT)");
+
+            statement.execute("CREATE TABLE IF NOT EXISTS content (pre INT PRIMARY KEY , text TEXT)");
+
+            statement.execute("CREATE TABLE IF NOT EXISTS attribute (pre INT PRIMARY KEY , text TEXT)");
+
+            statement.execute("CREATE INDEX idx_accel_pre ON accel(id)");
+            statement.execute("CREATE INDEX idx_accel_parent ON accel(parent)");
+            statement.execute("CREATE INDEX idx_edge_parents ON edge(parents)");
+            statement.execute("CREATE INDEX idx_edge_childs ON edge(childs)");
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public int insertIntoEdge(int parent, int children){
-        try (Statement statement = this.connection.createStatement()) {
-            PreparedStatement edgeStmt = this.connection.prepareStatement("INSERT INTO edge (parents, childs) VALUES (?, ?)");
-            children++;
-
-            edgeStmt.setInt(1, parent);
-            edgeStmt.setInt(2, children);
-            edgeStmt.executeUpdate();
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } return children;
-    }
-
-    public void fillSchema() throws SQLException {
-        calculatePrePostOrder();
+    public void populateSchema() throws SQLException {
         populateAccelTable();
         populateContentTable();
         populateAttributeTable();
     }
 
-    // Methode zur Berechnung der Pre- und Post-Order-Werte mittels SQL
-    private void calculatePrePostOrder() throws SQLException {
-        // Temporäre Tabellen für die Berechnungen erstellen
-        String createTempTables =
-                "DROP TABLE IF EXISTS temp_nodes;" +
-                        "CREATE TEMP TABLE temp_nodes AS " +
-                        "WITH RECURSIVE tree AS (" +
-                        "    SELECT id, 1 AS level, CAST(1 AS INT) AS pre " +
-                        "    FROM node " +
-                        "    WHERE id = 1 " +  // Assuming 1 is the root node
-                        "    UNION ALL " +
-                        "    SELECT n.id, t.level + 1, CAST(ROW_NUMBER() OVER(ORDER BY t.pre) + t.pre AS INT) " +
-                        "    FROM node n " +
-                        "    JOIN edge e ON n.id = e.childs " +
-                        "    JOIN tree t ON e.parents = t.id " +
-                        ") " +
-                        "SELECT id, level, pre, CAST(ROW_NUMBER() OVER (ORDER BY level DESC, pre DESC) AS INT) AS post " +
-                        "FROM tree;";
-
-
-        try (Statement stmt = this.connection.createStatement()) {
-            stmt.execute(createTempTables);
+    public void populateAccelTable() throws SQLException {
+        try (Statement statement = this.connection.createStatement()) {
+            statement.executeUpdate("INSERT INTO accel (id, post, s_id, parent, type) SELECT id, 0, s_id, 0, type FROM node;");
+            statement.executeUpdate("UPDATE accel a SET parent = e.parents FROM edge e WHERE a.id = e.childs;");
+            System.out.println("Values updated.");
+            calculatePrePostOrderNumbers();
+            System.out.println("Pre- and Post-order numbers calculated.");
         }
     }
 
-    // Daten aus den temporären Tabellen in die Zieltabelle einfügen
-    private void populateAccelTable() throws SQLException {
-        String insertAccel =
-                "INSERT INTO accel (pre, post, parent, kind, name) " +
-                        "SELECT tn.pre, tn.post, e.parents, n.type, n.s_id " +
-                        "FROM temp_nodes tn " +
-                        "JOIN edge e ON tn.id = e.childs " +
-                        "JOIN node n ON e.childs = n.id;";
 
-        try (PreparedStatement pstmt = this.connection.prepareStatement(insertAccel)) {
-            pstmt.executeUpdate();
+    public void calculatePrePostOrderNumbers() throws SQLException {
+        String getNodeQuery = "SELECT id, parent FROM accel";
+        Map<Integer, List<Integer>> tree = new HashMap<>();
+        Integer root = null;
+
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(getNodeQuery)) {
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                int parent = rs.getInt("parent");
+                tree.computeIfAbsent(parent, k -> new ArrayList<>()).add(id);
+                if (parent == 0 || root != 0) {
+                    root = id;
+                }
+            }
+        }
+        System.out.println(root);
+
+        Map<Integer, Integer> preOrderMap = new HashMap<>();
+        Map<Integer, Integer> postOrderMap = new HashMap<>();
+        AtomicInteger order = new AtomicInteger(1);
+
+        calculatePrePostOrder(tree, root, order, preOrderMap, postOrderMap);
+
+        try (PreparedStatement pstmt = connection.prepareStatement("UPDATE accel SET post = ? WHERE id = ?")) {
+            for (Integer id : preOrderMap.keySet()) {
+                pstmt.setInt(1, postOrderMap.get(id));
+                pstmt.setInt(2, id);
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
         }
     }
 
-    // Daten in die Tabelle content einfügen
+    private void calculatePrePostOrder(Map<Integer, List<Integer>> tree, int node, AtomicInteger order, Map<Integer, Integer> preOrderMap, Map<Integer, Integer> postOrderMap) {
+        preOrderMap.put(node, order.getAndIncrement());
+
+        if (tree.containsKey(node)) {
+            for (int child : tree.get(node)) {
+                postOrderMap.put(node, order.getAndIncrement());
+                calculatePrePostOrder(tree, child, order, preOrderMap, postOrderMap);
+            }
+        }
+
+        postOrderMap.put(node, order.getAndIncrement());
+    }
+
     private void populateContentTable() throws SQLException {
         String insertContent =
                 "INSERT INTO content (pre, text) " +
-                        "SELECT tn.pre, n.content " +
-                        "FROM temp_nodes tn " +
-                        "JOIN node n ON tn.id = n.id;";
+                        "SELECT a.id, a.type " +
+                        "FROM accel a ";
 
         try (PreparedStatement pstmt = this.connection.prepareStatement(insertContent)) {
             pstmt.executeUpdate();
         }
     }
 
-    // Daten in die Tabelle attribute einfügen
     private void populateAttributeTable() throws SQLException {
         String insertAttribute =
                 "INSERT INTO attribute (pre, text) " +
-                        "SELECT tn.pre, n.s_id " +
-                        "FROM temp_nodes tn " +
-                        "JOIN node n ON tn.id = n.id;";
+                        "SELECT a.id, a.s_id " +
+                        "FROM accel a ";
 
         try (PreparedStatement pstmt = this.connection.prepareStatement(insertAttribute)) {
             pstmt.executeUpdate();
         }
     }
-
-
-    public void createFunctionXPathInEdgeModel(){
-        createAncestors();
-        createDescendants();
-        createFollowingSiblings();
-        createPreceedingSiblings();
-    }
-
-    private void createAncestors(){
-        try (Statement statement = this.connection.createStatement()) {
-            statement.execute("CREATE OR REPLACE FUNCTION get_ancestors(v INT) " +
-                    "RETURNS TABLE(ancestor INT) AS $$ " +
-                    "BEGIN RETURN QUERY " +
-                    "WITH RECURSIVE Ancestors AS ( " +
-                    "SELECT e.parents FROM edge e WHERE e.childs = v " +
-                    "UNION " +
-                    "SELECT e.parents FROM edge e " +
-                    "INNER JOIN Ancestors a ON e.childs = a.parents ) " +
-                    "SELECT parents FROM Ancestors; " +
-                    "END; $$ LANGUAGE plpgsql;");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void createDescendants(){
-        try (Statement statement = this.connection.createStatement()) {
-            statement.execute("CREATE OR REPLACE FUNCTION get_descendants(v INT) " +
-                    "RETURNS TABLE(descendant INT) AS $$ " +
-                    "BEGIN RETURN QUERY " +
-                    "WITH RECURSIVE Descendants AS ( " +
-                    "SELECT e.childs FROM edge e WHERE e.parents = v " +
-                    "UNION " +
-                    "SELECT e.childs FROM edge e " +
-                    "INNER JOIN Descendants d ON e.parents = d.childs ) " +
-                    "SELECT childs FROM Descendants; " +
-                    "END; $$ LANGUAGE plpgsql;");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void createFollowingSiblings(){
-        try (Statement statement = this.connection.createStatement()) {
-            statement.execute("CREATE OR REPLACE FUNCTION get_following_siblings(v INT) " +
-                    "RETURNS TABLE(following_siblings INT) AS $$ " +
-                    "BEGIN RETURN QUERY " +
-                    "SELECT n2.id FROM node n1 " +
-                    "JOIN edge e1 ON n1.id = e1.childs " +
-                    "JOIN edge e2 ON e1.parents = e2.parents " +
-                    "JOIN node n2 ON e2.childs = n2.id " +
-                    "WHERE n1.id = v AND e2.childs != v AND n2.id > n1.id; " +
-                    "END; $$ LANGUAGE plpgsql;");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void createPreceedingSiblings (){
-        try (Statement statement = this.connection.createStatement()) {
-            statement.execute("CREATE OR REPLACE FUNCTION get_preceeding_siblings(v INT) " +
-                    "RETURNS TABLE(prec_sibl INT) AS $$ " +
-                    "BEGIN RETURN QUERY " +
-                    "SELECT n2.id FROM node n1 " +
-                    "JOIN edge e1 ON n1.id = e1.childs " +
-                    "JOIN edge e2 ON e1.parents = e2.parents " +
-                    "JOIN node n2 ON e2.childs = n2.id " +
-                    "WHERE n1.id = v AND e2.childs != v AND n2.id < n1.id; " +
-                    "END; $$ LANGUAGE plpgsql;");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }
+
+
+/*
+    private void calculatePrePostOrderNumbers() throws SQLException {
+        String getNodeQuery = "SELECT id, parent FROM accel";
+        Map<Integer, List<Integer>> tree = new HashMap<>();
+        Set<Integer> allNodes = new HashSet<>();
+        Set<Integer> childNodes = new HashSet<>();
+
+        try (Statement stmt = this.connection.createStatement();
+             ResultSet rs = stmt.executeQuery(getNodeQuery)) {
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                int parent = rs.getInt("parent");
+                allNodes.add(id);
+                if (parent != 0) {
+                    childNodes.add(id);
+                }
+                tree.computeIfAbsent(parent, k -> new ArrayList<>()).add(id);
+            }
+        }
+
+        allNodes.removeAll(childNodes);
+        Integer root = allNodes.isEmpty() ? null : allNodes.iterator().next();
+
+        if (root == null) {
+            throw new IllegalStateException("No root found");
+        }
+
+        for (List<Integer> children : tree.values()) {
+            children.sort(Comparator.naturalOrder());
+        }
+
+        // Check for cycles and remove them
+        Set<Integer> visited = new HashSet<>();
+        Set<Integer> recStack = new HashSet<>();
+
+        for (Integer node : tree.keySet()) {
+            if (isCyclic(tree, node, visited, recStack)) {
+                removeCycle(tree, node);
+                break;
+            }
+        }
+
+        Map<Integer, Integer> preOrderMap = new HashMap<>();
+        Map<Integer, Integer> postOrderMap = new HashMap<>();
+        AtomicInteger order = new AtomicInteger(1);
+
+        calculatePrePostOrder(tree, root, order, preOrderMap, postOrderMap, new HashSet<>());
+
+        try (PreparedStatement pstmt = this.connection.prepareStatement("UPDATE accel SET post = ? WHERE id = ?")) {
+            for (Map.Entry<Integer, Integer> entry : preOrderMap.entrySet()) {
+                pstmt.setInt(1, postOrderMap.get(entry.getKey()));
+                pstmt.setInt(2, entry.getKey());
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+        }
+    }
+
+    private static boolean isCyclic(Map<Integer, List<Integer>> tree, int node, Set<Integer> visited, Set<Integer> recStack) {
+        if (recStack.contains(node)) {
+            return true;
+        }
+        if (visited.contains(node)) {
+            return false;
+        }
+        visited.add(node);
+        recStack.add(node);
+        if (tree.containsKey(node)) {
+            for (Integer neighbor : tree.get(node)) {
+                if (isCyclic(tree, neighbor, visited, recStack)) {
+                    return true;
+                }
+            }
+        }
+        recStack.remove(node);
+        return false;
+    }
+
+    private static void removeCycle(Map<Integer, List<Integer>> tree, int node) {
+        // This method will remove cycles by breaking the first detected cycle.
+        Set<Integer> visited = new HashSet<>();
+        removeCycleHelper(tree, node, visited);
+    }
+
+    private static boolean removeCycleHelper(Map<Integer, List<Integer>> tree, int node, Set<Integer> visited) {
+        if (visited.contains(node)) {
+            return true;
+        }
+        visited.add(node);
+        if (tree.containsKey(node)) {
+            for (Iterator<Integer> iterator = tree.get(node).iterator(); iterator.hasNext(); ) {
+                Integer child = iterator.next();
+                if (removeCycleHelper(tree, child, visited)) {
+                    iterator.remove();
+                    return true;
+                }
+            }
+        }
+        visited.remove(node);
+        return false;
+    }
+
+    private static int calculatePrePostOrder(Map<Integer, List<Integer>> tree, int node, AtomicInteger order,
+                                             Map<Integer, Integer> preOrderMap, Map<Integer, Integer> postOrderMap, Set<Integer> visited) {
+        if (visited.contains(node)) {
+            throw new IllegalStateException("Cycle detected in the tree");
+        }
+        visited.add(node);
+
+        int preOrder = order.getAndIncrement();
+        preOrderMap.put(node, preOrder);
+
+        if (tree.containsKey(node)) {
+            for (int child : tree.get(node)) {
+                calculatePrePostOrder(tree, child, order, preOrderMap, postOrderMap, visited);
+            }
+        }
+
+        int postOrder = order.getAndIncrement();
+        postOrderMap.put(node, postOrder);
+
+        visited.remove(node);
+        return order.get();
+    }
+
+    private static int calculatePrePostOrder(Map<Integer, List<Integer>> tree, int node, AtomicInteger order, Map<Integer, Integer> preOrderMap, Map<Integer, Integer> postOrderMap) {
+        int preOrder = order.getAndIncrement();
+        preOrderMap.put(node, preOrder);
+
+        if (tree.containsKey(node)) {
+            for (int child : tree.get(node)) {
+                order.set(calculatePrePostOrder(tree, child, order, preOrderMap, postOrderMap));
+            }
+        }
+
+        int postOrder = order.getAndIncrement();
+        postOrderMap.put(node, postOrder);
+        return order.get();
+    }
+
+    private int calculatePostOrder(Map<Integer, List<Integer>> tree, Map<Integer, Integer> preOrderMap) {
+        Map<Integer, List<Integer>> sortedTree = new TreeMap<>(tree);
+
+        for (Map.Entry<Integer, List<Integer>> entry : sortedTree.entrySet()) {
+            Collections.sort(entry.getValue());
+        }
+        System.out.println(sortedTree.values());
+        System.out.println("Pre-order numbers calculated.");
+        return 0;
+    }
+
+    private int calculatePreOrder(Map<Integer, List<Integer>> tree, Map<Integer, Integer> preOrderMap) {
+
+        return 0;
+    }
+     */

@@ -64,9 +64,9 @@ Geben Sie die folgende Kennzahl bezogen auf \texttt{my\_small\_bib.xml} an:
 	\item Position (Zeilennummer von, bis) der Publikationen des Toy-Beispiels in \texttt{my\_small\_bib.xml}
 	
 	\begin{itemize}
-		\item SchmittKAMM23: 287697 $-$ 287712 Lines
-		\item HutterAK0L22: 23718 $-$ 23731 Lines
-		\item SchalerHS23: 279305 $-$ 279318 Lines
+		\item SchmittKAMM23: 287697 $-$ 287712
+		\item HutterAK0L22: 23718 $-$ 23731
+		\item SchalerHS23: 279305 $-$ 279318
 	\end{itemize}
 	\item Größe der Datei \texttt{my\_small\_bib.xml} in kB und Zeilenanzahl: 13.065 KB \& 337.405 Zeilen
 \end{itemize}
@@ -77,15 +77,15 @@ Geben Sie die folgende Kennzahl bezogen auf \texttt{my\_small\_bib.xml} an:
 Geben Sie die Create Table statements aller von Ihnen angelegten Tabellen an:
 \begin{lstlisting}[style=dmrsql]
 CREATE TABLE IF NOT EXISTS node (id int ,s_id TEXT, type TEXT,
-		content TEXT)
+			content TEXT)
 CREATE TABLE IF NOT EXISTS edge (parents INT, childs INT)
 
-CREATE TABLE IF NOT EXISTS accel (pre INT, post INT, parent INT,
-		kind VARCHAR(255), name VARCHAR(255))
+CREATE TABLE IF NOT EXISTS accel (id INT PRIMARY KEY, post INT,
+			s_id TEXT, parent INT, type TEXT)
 
-CREATE TABLE IF NOT EXISTS content (pre INT, text TEXT)
+CREATE TABLE IF NOT EXISTS content (pre INT PRIMARY KEY , text TEXT)
 
-CREATE TABLE IF NOT EXISTS attribute (pre INT, text TEXT)
+CREATE TABLE IF NOT EXISTS attribute (pre INT PRIMARY KEY , text TEXT)
 \end{lstlisting}
 
 \subsection*{Pre-/Post-Order Annotation (1 Punkt).}
@@ -94,6 +94,13 @@ Berechnen Sie hierfür händisch die Pre-/Post-Order Annotation.
 Inkludieren Sie diese als Foto / Screenshot oder ähnliches in dieses Dokument.
 Zeigen Sie dann, dass Ihre Lösung hierfür dieselben Ergebnisse liefert.
 Sie können Die Mittels Foto / Screenshot belegen oder in der Übung zeigen.
+
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{PrePostBaum.png}
+	\caption{Händische Berechnung Pre/Post Baum}\label{fig:node}
+\end{figure}
+
+\newpage
 
 \subsection*{Achse als Fenster (2 Punkt)}
 Zeigen Sie, dass die Berechnung der Achsen für die Beispiele aus Phase 1 hier die gleichen Ergebnisse erzeugen:
@@ -105,12 +112,12 @@ Zeigen Sie, dass die Berechnung der Achsen für die Beispiele aus Phase 1 hier d
 				\toprule
 				Achse & Ergebnisknoten ID's & Ergebnisgröße\\
 				\midrule
-				ancestor & ... & ... \\ 
-				descendants & ... & ... \\  
-				following SchmittKAMM23& ... & ... \\  
-				preceeding SchmittKAMM23 & ... & ... \\ 
-				following SchalerHS23& ... & ... \\  
-				preceeding SchalerHS23& ... & ... \\ 
+				ancestor & 98169 & 4 \\
+				descendants & 171219 & 6780 \\
+				following SchmittKAMM23 & 175900 & 143 \\
+				preceeding SchmittKAMM23 & 175900 & 322 \\
+				following SchalerHS23 & 175872 & 145 \\
+				preceeding SchalerHS23 & 175872 & 320 \\
 				\bottomrule
 			\end{tabular}
 			\end{center}
@@ -127,8 +134,8 @@ Zeigen Sie, dass die Berechnung der Achsen für die Beispiele aus Phase 1 hier d
 				\midrule
 				ancestor & ... & ... \\ 
 				descendants & ... & ... \\  
-				following SchmittKAMM23& ... & ... \\  
-				preceeding SchmittKAMM23 & ... & ... \\ 
+				following SchmittKAMM23& ... & ... \\
+				preceeding SchmittKAMM23 & ... & ... \\
 				following SchalerHS23& ... & ... \\  
 				preceeding SchalerHS23& ... & ... \\ 
 				\bottomrule
@@ -141,8 +148,8 @@ Zeigen Sie, dass die Berechnung der Achsen für die Beispiele aus Phase 1 hier d
 \subsection*{Zeitmamagement}
 
 Benötigte Zeit pro Person (nur Phase 2):
-\textbf{Alexander Weilert: 10h} \\
-\textbf{Dragana Jovanovic: 9h}
+\textbf{Alexander Weilert: 15h} \\
+\textbf{Dragana Jovanovic: 14h}
 
 
 \end{document}

@@ -21,9 +21,9 @@ public class Berechnung_XPath_Achsen_Main {
             } else
                 bxpam.openConnection();
 
-            bxpam.preprocessXMLFile(args[0], "src/db/my_small_bib.xml", args[1]);
+            //bxpam.preprocessXMLFile(args[0], "src/db/my_small_bib.xml", args[1]);
 
-            List<Publication> publications = bxpam.parseXMLFile("src/db/my_small_bib.xml");
+            List<Publication> publications = bxpam.parseXMLFile("src/db/toy_example_processed.txt");
 
             Map<String, Map<String, List<Publication>>> transformedData = bxpam.transformData(publications);
 
@@ -31,9 +31,13 @@ public class Berechnung_XPath_Achsen_Main {
 
             bxpam.insertData(transformedData);
 
-            bxpam.createFunctionXPathInEdgeModel();
+            bxpam.populateSchema();
 
-            bxpam.fillSchema();
+            EdgeModelFunctions emf = new EdgeModelFunctions(bxpam.connection);
+            emf.createFunctionXPathInEdgeModel();
+
+            XPathFunctions xpath = new XPathFunctions(bxpam.connection);
+            xpath.createFunctionXPath();
 
             bxpam.closeConnection();
 
@@ -41,10 +45,6 @@ public class Berechnung_XPath_Achsen_Main {
             e.printStackTrace();
         }
     }
-
-
-
-
 
 
     public static void toyBeispiel(Berechnung_XPath_Achsen bxpam){
@@ -63,9 +63,13 @@ public class Berechnung_XPath_Achsen_Main {
 
             bxpam.insertData(transformedData);
 
-            bxpam.createFunctionXPathInEdgeModel();
+            bxpam.populateSchema();
 
-            bxpam.fillSchema();
+            EdgeModelFunctions emf = new EdgeModelFunctions(bxpam.connection);
+            emf.createFunctionXPathInEdgeModel();
+
+            XPathFunctions xpath = new XPathFunctions(bxpam.connection);
+            xpath.createFunctionXPath();
 
             bxpam.closeConnection();
 
