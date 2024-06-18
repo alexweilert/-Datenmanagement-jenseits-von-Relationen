@@ -448,7 +448,7 @@ public class Berechnung_XPath_Achsen {
                 int id = rs.getInt("id");
                 int parent = rs.getInt("parent");
                 tree.computeIfAbsent(parent, k -> new ArrayList<>()).add(id);
-                if (parent == 0 || root != 0) {
+                if (parent == 0) {
                     root = id;
                 }
             }
