@@ -43,7 +43,7 @@ class SAXHandler extends DefaultHandler {
     public void endElement(String uri, String localName, String qName) {
         if (currentPublication != null) {
             switch (qName.toLowerCase()) {
-                case "author":
+                case "author", "editor":
                     if (currentPublication.author == null) {
                         currentPublication.author = content.toString();
                     } else {

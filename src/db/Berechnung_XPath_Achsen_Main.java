@@ -33,7 +33,7 @@ public class Berechnung_XPath_Achsen_Main {
 
             bxpam.createFunctionXPathInEdgeModel();
 
-
+            bxpam.fillSchema();
 
             bxpam.closeConnection();
 
@@ -64,6 +64,8 @@ public class Berechnung_XPath_Achsen_Main {
             bxpam.insertData(transformedData);
 
             bxpam.createFunctionXPathInEdgeModel();
+
+            bxpam.fillSchema();
 
             bxpam.closeConnection();
 

@@ -10,17 +10,12 @@ import java.util.*;
 public class Berechnung_XPath_Achsen {
     Connection connection;
 
-    public Berechnung_XPath_Achsen() throws SQLException, ClassNotFoundException {
+    public Berechnung_XPath_Achsen(){
     }
 
-    public boolean openConnection() throws SQLException, ClassNotFoundException {
+    public void openConnection() throws SQLException, ClassNotFoundException {
         Class.forName("org.postgresql.Driver");
         this.connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "alex");
-        return !isConnectionClosed();
-    }
-
-    public boolean isConnectionClosed() throws SQLException {
-        return this.connection.isClosed();
     }
 
     public void closeConnection() throws SQLException {
@@ -44,41 +39,52 @@ public class Berechnung_XPath_Achsen {
     public void preprocessXMLFile(String inputFilePath, String outputFilePath, String venueList) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(inputFilePath));
         FileWriter writer = new FileWriter(outputFilePath);
-        String line;
         writer.write("<bib>\n");
         boolean isInsidePublication = true;
+        String line = reader.readLine();
         boolean initial = false;
-        while ((line = reader.readLine()) != null) {
+        while (line != null) {
+
             line = replace(line);
-            if(initial && ( line.equals("</proceedings>") || line.equals("</inproceedings>") || line.equals("</article>")) ) {
+            if(initial && isEndOFArticle(line)) {
+
                 writer.write(line + "\n");
                 initial = false;
-            }
-            else if (line.contains("key=")) {
-                if(initial && line.contains("><")) {
+
+            } else if (line.contains("key=")) {
+
+                if(line.contains("><") && initial) {
+
                     String splitter = line.split("><")[0] + ">";
                     writer.write( splitter + "\n");
                     initial = false;
-                }
-                if(isImportant(line, venueList)) {
+
+                } if(isImportant(line, venueList)) {
+
                     if(line.contains("><") && isInsidePublication) {
+
                         String splitter = "<" + line.split("><")[1];
                         writer.write(splitter + "\n");
                         isInsidePublication = false;
-                    }
-                    else writer.write(line + "\n");
+
+                    } else writer.write(line + "\n");
+
 
                     while ((line = reader.readLine()) != null) {
                         line = replace(line);
-                        writer.write(line + "\n");
-                        if (line.contains("url")) {
+
+                        if( isArticel(line) || isEndOFArticle(line)) {
+
                             isInsidePublication = true;
                             initial = true;
                             break;
-                        }
+
+                        } else writer.write(line + "\n");
                     }
-                }
-            }
+
+                } else line = reader.readLine();
+            } else line = reader.readLine();
+
         }
         writer.write("</bib>");
         reader.close();
@@ -157,6 +163,16 @@ public class Berechnung_XPath_Achsen {
         return line;
     }
 
+    public boolean isArticel(String line) {
+        return  line.contains("</proceedings><proceedings>")    || line.contains("</inproceedings><proceedings>")   || line.contains("</article><proceedings>") ||
+                line.contains("</proceedings><inproceedings>")  || line.contains("</inproceedings><inproceedings>") || line.contains("</article><inproceedings>") ||
+                line.contains("</proceedings><article")         || line.contains("</inproceedings><article>")       || line.contains("</article><article>");
+    }
+
+    public boolean isEndOFArticle(String line) {
+        return line.equals("</proceedings>") || line.equals("</inproceedings>") || line.equals("</article>");
+    }
+
     public boolean isImportant(String line, String venueList) {
         String[] venues = venueList.split(",");
         if (line.contains("key")) {
@@ -226,11 +242,17 @@ public class Berechnung_XPath_Achsen {
     public void createTables(){
         try (Statement statement = this.connection.createStatement()) {
 
-            statement.execute("DROP TABLE IF EXISTS publications, years, venues, node, edge");
+            statement.execute("DROP TABLE IF EXISTS node, edge, accel, content, attribute");
 
             statement.execute("CREATE TABLE node (id int ,s_id TEXT, type TEXT, content TEXT)");
 
             statement.execute("CREATE TABLE edge (parents INT, childs INT)");
+
+            statement.execute("CREATE TABLE accel (pre INT, post INT, parent INT, kind VARCHAR(255), name VARCHAR(255))");
+
+            statement.execute("CREATE TABLE content (pre INT, text TEXT)");
+
+            statement.execute("CREATE TABLE attribute (pre INT, text TEXT)");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -285,10 +307,13 @@ public class Berechnung_XPath_Achsen {
                         insertIntoNode(id, pub.article, pub.type, null);
 
                         pubparents = id;
-                        String[] authors = pub.author.split(",");
-                        for (int i = 0; i < authors.length; i++) {
-                            id = insertIntoEdge(pubparents, id);
-                            insertIntoNode(id, null, "author", authors[i].trim());
+
+                        if (pub.author != null) {
+                            String[] authors = pub.author.split(",");
+                            for (int i = 0; i < authors.length; i++) {
+                                id = insertIntoEdge(pubparents, id);
+                                insertIntoNode(id, null, "author", authors[i].trim());
+                            }
                         }
 
                         if (pub.title != null) {
@@ -369,6 +394,78 @@ public class Berechnung_XPath_Achsen {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } return children;
+    }
+
+    public void fillSchema() throws SQLException {
+        calculatePrePostOrder();
+        populateAccelTable();
+        populateContentTable();
+        populateAttributeTable();
+    }
+
+    // Methode zur Berechnung der Pre- und Post-Order-Werte mittels SQL
+    private void calculatePrePostOrder() throws SQLException {
+        // Temporäre Tabellen für die Berechnungen erstellen
+        String createTempTables =
+                "DROP TABLE IF EXISTS temp_nodes;" +
+                        "CREATE TEMP TABLE temp_nodes AS " +
+                        "WITH RECURSIVE tree AS (" +
+                        "    SELECT id, 1 AS level, CAST(1 AS INT) AS pre " +
+                        "    FROM node " +
+                        "    WHERE id = 1 " +  // Assuming 1 is the root node
+                        "    UNION ALL " +
+                        "    SELECT n.id, t.level + 1, CAST(ROW_NUMBER() OVER(ORDER BY t.pre) + t.pre AS INT) " +
+                        "    FROM node n " +
+                        "    JOIN edge e ON n.id = e.childs " +
+                        "    JOIN tree t ON e.parents = t.id " +
+                        ") " +
+                        "SELECT id, level, pre, CAST(ROW_NUMBER() OVER (ORDER BY level DESC, pre DESC) AS INT) AS post " +
+                        "FROM tree;";
+
+
+        try (Statement stmt = this.connection.createStatement()) {
+            stmt.execute(createTempTables);
+        }
+    }
+
+    // Daten aus den temporären Tabellen in die Zieltabelle einfügen
+    private void populateAccelTable() throws SQLException {
+        String insertAccel =
+                "INSERT INTO accel (pre, post, parent, kind, name) " +
+                        "SELECT tn.pre, tn.post, e.parents, n.type, n.s_id " +
+                        "FROM temp_nodes tn " +
+                        "JOIN edge e ON tn.id = e.childs " +
+                        "JOIN node n ON e.childs = n.id;";
+
+        try (PreparedStatement pstmt = this.connection.prepareStatement(insertAccel)) {
+            pstmt.executeUpdate();
+        }
+    }
+
+    // Daten in die Tabelle content einfügen
+    private void populateContentTable() throws SQLException {
+        String insertContent =
+                "INSERT INTO content (pre, text) " +
+                        "SELECT tn.pre, n.content " +
+                        "FROM temp_nodes tn " +
+                        "JOIN node n ON tn.id = n.id;";
+
+        try (PreparedStatement pstmt = this.connection.prepareStatement(insertContent)) {
+            pstmt.executeUpdate();
+        }
+    }
+
+    // Daten in die Tabelle attribute einfügen
+    private void populateAttributeTable() throws SQLException {
+        String insertAttribute =
+                "INSERT INTO attribute (pre, text) " +
+                        "SELECT tn.pre, n.s_id " +
+                        "FROM temp_nodes tn " +
+                        "JOIN node n ON tn.id = n.id;";
+
+        try (PreparedStatement pstmt = this.connection.prepareStatement(insertAttribute)) {
+            pstmt.executeUpdate();
+        }
     }
 
 
