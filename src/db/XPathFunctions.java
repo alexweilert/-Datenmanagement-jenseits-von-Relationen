@@ -28,11 +28,11 @@ public class XPathFunctions {
                     "WITH RECURSIVE ancestors AS ( " +
                     "    SELECT parent " +
                     "    FROM accel " +
-                    "    WHERE pre = v " +
+                    "    WHERE id = v " +
                     "    UNION ALL " +
                     "    SELECT a.parent " +
                     "    FROM accel a " +
-                    "    JOIN ancestors ans ON a.pre = ans.parent " +
+                    "    JOIN ancestors ans ON a.id = ans.parent " +
                     ") " +
                     "SELECT parent AS ancestor_id FROM ancestors WHERE parent != 0; " +
                     "END; $$ LANGUAGE plpgsql;"
@@ -50,15 +50,15 @@ public class XPathFunctions {
                     "BEGIN " +
                     "RETURN QUERY " +
                     "WITH RECURSIVE descendants AS ( " +
-                    "    SELECT pre " +
+                    "    SELECT id " +
                     "    FROM accel " +
                     "    WHERE parent = v " +
                     "    UNION ALL " +
-                    "    SELECT a.pre " +
+                    "    SELECT a.id " +
                     "    FROM accel a " +
-                    "    JOIN descendants des ON a.parent = des.pre " +
+                    "    JOIN descendants des ON a.parent = des.id " +
                     ") " +
-                    "SELECT pre AS descendant_id FROM descendants; " +
+                    "SELECT id AS descendant_id FROM descendants; " +
                     "END; $$ LANGUAGE plpgsql;"
             );
         } catch (SQLException e) {
@@ -73,10 +73,10 @@ public class XPathFunctions {
                     "RETURNS TABLE(following_sibling_id INT) AS $$ " +
                     "BEGIN " +
                     "RETURN QUERY " +
-                    "SELECT n2.pre AS following_sibling_id " +
+                    "SELECT n2.id AS following_sibling_id " +
                     "FROM accel n1 " +
                     "JOIN accel n2 ON n1.parent = n2.parent " +
-                    "WHERE n1.pre = v AND n2.pre > n1.pre; " +
+                    "WHERE n1.id = v AND n2.id > n1.id; " +
                     "END; $$ LANGUAGE plpgsql;"
             );
         } catch (SQLException e) {
@@ -91,10 +91,10 @@ public class XPathFunctions {
                     "RETURNS TABLE(preceding_sibling_id INT) AS $$ " +
                     "BEGIN " +
                     "RETURN QUERY " +
-                    "SELECT n2.pre AS preceding_sibling_id " +
+                    "SELECT n2.id AS preceding_sibling_id " +
                     "FROM accel n1 " +
                     "JOIN accel n2 ON n1.parent = n2.parent " +
-                    "WHERE n1.pre = v AND n2.pre < n1.pre; " +
+                    "WHERE n1.id = v AND n2.id < n1.id; " +
                     "END; $$ LANGUAGE plpgsql;"
             );
         } catch (SQLException e) {
