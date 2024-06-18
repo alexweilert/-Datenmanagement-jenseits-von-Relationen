@@ -43,6 +43,10 @@ public class Berechnung_XPath_Achsen {
         boolean isInsidePublication = true;
         String line = reader.readLine();
         boolean initial = false;
+        int icde = 0, vldb = 0, sigmod = 0;
+
+        String publication = "";
+
         while (line != null) {
 
             line = replace(line);
@@ -60,19 +64,34 @@ public class Berechnung_XPath_Achsen {
                     initial = false;
 
                 } if(isImportant(line, venueList)) {
-
+                    if(isArticel(line) || isBeginofArticle(line)) {
+                        publication = line;
+                    }
                     if(line.contains("><") && isInsidePublication) {
 
                         String splitter = "<" + line.split("><")[1];
                         writer.write(splitter + "\n");
                         isInsidePublication = false;
 
-                    } else writer.write(line + "\n");
-
+                    } else
+                        writer.write(line + "\n");
 
                     while ((line = reader.readLine()) != null) {
                         line = replace(line);
-
+                        if(isArticel(line) || isBeginofArticle(line)) {
+                            publication = line;
+                        }
+                        if( ( line.contains("editor") || line.contains("author")) && ( line.contains("Nikolaus Augsten") || line.contains("Augsten Nikolaus") )) {
+                            if(publication.contains("conf/icde/")){
+                                icde++;
+                            }
+                            if(publication.contains("conf/vldb/") || publication.contains("journals/pvldb/")){
+                                vldb++;
+                            }
+                            if(publication.contains("conf/sigmod") || publication.contains("journals/pacmmod/")){
+                                sigmod++;
+                            }
+                        }
                         if( isArticel(line) || isEndOFArticle(line)) {
 
                             isInsidePublication = true;
@@ -86,6 +105,7 @@ public class Berechnung_XPath_Achsen {
             } else line = reader.readLine();
 
         }
+        System.out.println("ICDE: " + icde + ", VLDB: " + vldb + ", SIGMOD: " + sigmod);
         writer.write("</bib>");
         reader.close();
         writer.close();
@@ -164,13 +184,17 @@ public class Berechnung_XPath_Achsen {
     }
 
     public boolean isArticel(String line) {
-        return  line.contains("</proceedings><proceedings>")    || line.contains("</inproceedings><proceedings>")   || line.contains("</article><proceedings>") ||
-                line.contains("</proceedings><inproceedings>")  || line.contains("</inproceedings><inproceedings>") || line.contains("</article><inproceedings>") ||
-                line.contains("</proceedings><article")         || line.contains("</inproceedings><article>")       || line.contains("</article><article>");
+        return  line.contains("</proceedings><proceedings")    || line.contains("</inproceedings><proceedings")   || line.contains("</article><proceedings") ||
+                line.contains("</proceedings><inproceedings")  || line.contains("</inproceedings><inproceedings") || line.contains("</article><inproceedings") ||
+                line.contains("</proceedings><article")         || line.contains("</inproceedings><article")       || line.contains("</article><article");
     }
 
     public boolean isEndOFArticle(String line) {
         return line.equals("</proceedings>") || line.equals("</inproceedings>") || line.equals("</article>");
+    }
+
+    public boolean isBeginofArticle(String line){
+        return line.startsWith("<proceedings") || line.startsWith("<inproceedings")   || line.startsWith("<article");
     }
 
     public boolean isImportant(String line, String venueList) {
@@ -248,11 +272,12 @@ public class Berechnung_XPath_Achsen {
 
             statement.execute("CREATE TABLE edge (parents INT, childs INT)");
 
-            statement.execute("CREATE TABLE accel (pre INT, post INT, parent INT, kind VARCHAR(255), name VARCHAR(255))");
+            statement.execute("CREATE TABLE IF NOT EXISTS accel (pre INT, post INT, parent INT, " +
+                                                                    "kind VARCHAR(255), name VARCHAR(255))");
 
-            statement.execute("CREATE TABLE content (pre INT, text TEXT)");
+            statement.execute("CREATE TABLE IF NOT EXISTS content (pre INT, text TEXT)");
 
-            statement.execute("CREATE TABLE attribute (pre INT, text TEXT)");
+            statement.execute("CREATE TABLE IF NOT EXISTS attribute (pre INT, text TEXT)");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
