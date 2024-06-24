@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 23.1) (preloaded format=pdflatex 2023.4.1)  19 JUN 2024 16:56
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 23.1) (preloaded format=pdflatex 2023.4.1)  24 JUN 2024 17:16
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -262,7 +262,8 @@ File: l3backend-pdftex.def 2023-01-16 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count276
 \l__pdf_internal_box=\box57
 )
-No file report_template_task3_phase2.aux.
+(C:/Users\weile\Desktop\Datenmanagement-jenseits-von-Relationen\auxil\report_te
+mplate_task3_phase2.aux)
 \openout1 = `report_template_task3_phase2.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 47.
@@ -288,6 +289,7 @@ Package scrbase Info: activating english \listfigurename on input line 47.
 Package scrbase Info: activating english \listtablename on input line 47.
 Package scrbase Info: activating english \refname on input line 47.
 Package scrbase Info: activating english \indexname on input line 47.
+
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
 *geometry* verbose mode - [ preamble ] result:
@@ -562,34 +564,30 @@ my insertion and my current dilemma will both disappear.
 
 [3]
 (C:/Users\weile\Desktop\Datenmanagement-jenseits-von-Relationen\auxil\report_te
-mplate_task3_phase2.aux)
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
- ) 
+mplate_task3_phase2.aux) ) 
 Here is how much of TeX's memory you used:
- 7457 strings out of 476334
- 139647 string characters out of 5787972
+ 7459 strings out of 476334
+ 139849 string characters out of 5787972
  1867382 words of memory out of 5000000
  27841 multiletter control sequences out of 15000+600000
  519667 words of font info for 57 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  108i,9n,106p,10925b,1878s stack positions out of 10000i,1000n,20000p,200000b,200000s
- <C:\Users\weile\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm
-1095.pk><C:/Users/weile/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
-ts/cm/cmbx10.pfb><C:/Users/weile/AppData/Local/Programs/MiKTeX/fonts/type1/publ
-ic/amsfonts/cm/cmr10.pfb><C:/Users/weile/AppData/Local/Programs/MiKTeX/fonts/ty
-pe1/public/amsfonts/cm/cmr12.pfb><C:/Users/weile/AppData/Local/Programs/MiKTeX/
-fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/weile/AppData/Local/Programs/
-MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/weile/AppData/Local/Pr
-ograms/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Users/weile/AppData/L
-ocal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmssbx10.pfb><C:/Users/weil
-e/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/U
-sers/weile/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.
-pfb><C:/Users/weile/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/c
-m/cmtt10.pfb>
+ <C:\Users\weile\AppData\Local\MiKTeX\fonts/pk/ljfour
+/jknappen/ec/dpi600\tcrm1095.pk><C:/Users/weile/AppData/Local/Programs/MiKTeX/f
+onts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/weile/AppData/Local/Programs
+/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/weile/AppData/Local/
+Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/weile/AppDat
+a/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/weile
+/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/User
+s/weile/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb><
+C:/Users/weile/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cms
+sbx10.pfb><C:/Users/weile/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsf
+onts/cm/cmsy10.pfb><C:/Users/weile/AppData/Local/Programs/MiKTeX/fonts/type1/pu
+blic/amsfonts/cm/cmti10.pfb><C:/Users/weile/AppData/Local/Programs/MiKTeX/fonts
+/type1/public/amsfonts/cm/cmtt10.pfb>
 Output written on C:/Users\weile\Desktop\Datenmanagement-jenseits-von-Relatione
-n\out\report_template_task3_phase2.pdf (3 pages, 2349688 bytes).
+n\out\report_template_task3_phase2.pdf (3 pages, 2349689 bytes).
 PDF statistics:
  68 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)

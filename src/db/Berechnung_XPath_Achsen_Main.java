@@ -39,8 +39,11 @@ public class Berechnung_XPath_Achsen_Main {
             XPathFunctions xpath = new XPathFunctions(bxpam.connection);
             xpath.createFunctionXPath();
 
-            bxpam.closeConnection();
+            XPathSmallerWindow xPathSmallerWindow = new XPathSmallerWindow(bxpam.connection);
+            xPathSmallerWindow.createFunctionXPathSmallWindow();
 
+
+            bxpam.closeConnection();
         } catch (Exception e) {
             e.printStackTrace();
         }
