@@ -18,59 +18,12 @@ public class XPathFunctions {
         createPrecedingSiblingsXPath();
     }
 
-    private void createAncestorsXPath() {
-        try (Statement statement = this.connection.createStatement()) {
-            statement.execute(
-            "CREATE OR REPLACE FUNCTION get_ancestors(v INT) " +
-                    "RETURNS TABLE(ancestor_id INT) AS $$ " +
-                    "BEGIN " +
-                    "RETURN QUERY " +
-                    "WITH RECURSIVE ancestors AS ( " +
-                    "    SELECT parent " +
-                    "    FROM accel " +
-                    "    WHERE id = v " +
-                    "    UNION ALL " +
-                    "    SELECT a.parent " +
-                    "    FROM accel a " +
-                    "    JOIN ancestors ans ON a.id = ans.parent " +
-                    ") " +
-                    "SELECT parent AS ancestor_id FROM ancestors WHERE parent != 0; " +
-                    "END; $$ LANGUAGE plpgsql;"
-            );
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void createDescendantsXPath() {
-        try (Statement statement = this.connection.createStatement()) {
-            statement.execute(
-            "CREATE OR REPLACE FUNCTION get_descendants(v INT) " +
-                    "RETURNS TABLE(descendant_id INT) AS $$ " +
-                    "BEGIN " +
-                    "RETURN QUERY " +
-                    "WITH RECURSIVE descendants AS ( " +
-                    "    SELECT id " +
-                    "    FROM accel " +
-                    "    WHERE parent = v " +
-                    "    UNION ALL " +
-                    "    SELECT a.id " +
-                    "    FROM accel a " +
-                    "    JOIN descendants des ON a.parent = des.id " +
-                    ") " +
-                    "SELECT id AS descendant_id FROM descendants; " +
-                    "END; $$ LANGUAGE plpgsql;"
-            );
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private void createFollowingSiblingsXPath() {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute(
-            "CREATE OR REPLACE FUNCTION get_following_siblings(v INT) " +
+            "CREATE OR REPLACE FUNCTION xp_following_siblings(v INT) " +
                     "RETURNS TABLE(following_sibling_id INT) AS $$ " +
+                    "DECLARE post_v INT; " +
                     "BEGIN " +
                     "RETURN QUERY " +
                     "SELECT n2.id AS following_sibling_id " +
@@ -87,8 +40,9 @@ public class XPathFunctions {
     private void createPrecedingSiblingsXPath() {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute(
-            "CREATE OR REPLACE FUNCTION preceding_siblingsXP(v INT) " +
+            "CREATE OR REPLACE FUNCTION xp_preceding_siblings(v INT) " +
                     "RETURNS TABLE(preceding_sibling_id INT) AS $$ " +
+                    "DECLARE post_v INT; " +
                     "BEGIN " +
                     "RETURN QUERY " +
                     "SELECT n2.id AS preceding_sibling_id " +
@@ -102,4 +56,41 @@ public class XPathFunctions {
         }
     }
 
+    private void createAncestorsXPath() {
+        try (Statement statement = this.connection.createStatement()) {
+            statement.execute(
+                    "CREATE OR REPLACE FUNCTION xp_ancestors(v INT) " +
+                            "RETURNS TABLE(ancestor_id INT) AS $$ " +
+                            "DECLARE post_v INT; " +
+                            "BEGIN " +
+                            "SELECT post INTO post_v FROM accel WHERE id = v; " +
+                            "IF post_v IS NULL THEN " +
+                            "RETURN; END IF; " +
+                            "RETURN QUERY " +
+                            "SELECT id FROM accel WHERE id < v AND post > post_v; " +
+                            "END; $$ LANGUAGE plpgsql;"
+            );
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void createDescendantsXPath() {
+        try (Statement statement = this.connection.createStatement()) {
+            statement.execute(
+                    "CREATE OR REPLACE FUNCTION xp_descendants(v INT) " +
+                            "RETURNS TABLE(descendant_id INT) AS $$ " +
+                            "DECLARE post_v INT; " +
+                            "BEGIN " +
+                            "SELECT post INTO post_v FROM accel WHERE id = v; " +
+                            "IF post_v IS NULL THEN " +
+                            "RETURN; END IF; " +
+                            "RETURN QUERY " +
+                            "SELECT id FROM accel WHERE id > v AND post_v > post; " +
+                            "END; $$ LANGUAGE plpgsql;"
+            );
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

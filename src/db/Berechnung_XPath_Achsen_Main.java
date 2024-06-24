@@ -54,7 +54,6 @@ public class Berechnung_XPath_Achsen_Main {
 
             bxpam.preprocessXMLFile("src/db/toy_example.txt", "src/db/toy_example_processed.txt");
 
-
             List<Publication> publications = bxpam.parseXMLFile("src/db/toy_example_processed.txt");
 
             Map<String, Map<String, List<Publication>>> transformedData = bxpam.transformData(publications);

@@ -27,10 +27,4 @@ public class Publication {
         this.article = article;
     }
 
-    public int insertIntoNode(int id, Publication pub){
-
-
-
-        return id;
-    }
 }

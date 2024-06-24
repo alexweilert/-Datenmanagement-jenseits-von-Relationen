@@ -322,6 +322,11 @@ public class Berechnung_XPath_Achsen {
                             }
                         }
 
+                        if (pub.booktitle != null){
+                            id = insertIntoEdge(pubparents, id);
+                            insertIntoNode(id, null, "booktitle", pub.booktitle);
+                        }
+
                         if (pub.title != null) {
                             id = insertIntoEdge(pubparents, id);
                             insertIntoNode(id, null, "title", pub.title);
@@ -429,9 +434,7 @@ public class Berechnung_XPath_Achsen {
         try (Statement statement = this.connection.createStatement()) {
             statement.executeUpdate("INSERT INTO accel (id, post, s_id, parent, type) SELECT id, 0, s_id, 0, type FROM node;");
             statement.executeUpdate("UPDATE accel a SET parent = e.parents FROM edge e WHERE a.id = e.childs;");
-            System.out.println("Values updated.");
             calculatePrePostOrderNumbers();
-            System.out.println("Pre- and Post-order numbers calculated.");
         }
     }
 
@@ -439,6 +442,7 @@ public class Berechnung_XPath_Achsen {
     public void calculatePrePostOrderNumbers() throws SQLException {
         String getNodeQuery = "SELECT id, parent FROM accel";
         Map<Integer, List<Integer>> tree = new HashMap<>();
+        Set<Integer> allNodes = new HashSet<>();
         Integer root = null;
 
         try (Statement stmt = connection.createStatement();
@@ -447,41 +451,41 @@ public class Berechnung_XPath_Achsen {
             while (rs.next()) {
                 int id = rs.getInt("id");
                 int parent = rs.getInt("parent");
-                tree.computeIfAbsent(parent, k -> new ArrayList<>()).add(id);
-                if (parent == 0) {
+                allNodes.add(id);
+                if (parent == 0 && root == null) {
                     root = id;
+                } else {
+                    tree.computeIfAbsent(parent, k -> new ArrayList<>()).add(id);
                 }
             }
         }
-        System.out.println(root);
 
         Map<Integer, Integer> preOrderMap = new HashMap<>();
         Map<Integer, Integer> postOrderMap = new HashMap<>();
         AtomicInteger order = new AtomicInteger(1);
 
-        calculatePrePostOrder(tree, root, order, preOrderMap, postOrderMap);
+        calculatePrePostOrder(tree, root, order, preOrderMap, postOrderMap, allNodes);
 
-        try (PreparedStatement pstmt = connection.prepareStatement("UPDATE accel SET post = ? WHERE id = ?")) {
+        try (PreparedStatement pstmt = connection.prepareStatement("UPDATE accel SET id = ?, post = ? WHERE id = ?")) {
             for (Integer id : preOrderMap.keySet()) {
-                pstmt.setInt(1, postOrderMap.get(id));
-                pstmt.setInt(2, id);
+                pstmt.setInt(1, id);
+                pstmt.setInt(2, postOrderMap.get(id));
+                pstmt.setInt(3, id);
                 pstmt.addBatch();
             }
             pstmt.executeBatch();
         }
     }
 
-    private void calculatePrePostOrder(Map<Integer, List<Integer>> tree, int node, AtomicInteger order, Map<Integer, Integer> preOrderMap, Map<Integer, Integer> postOrderMap) {
-        preOrderMap.put(node, order.getAndIncrement());
-
+    private void calculatePrePostOrder(Map<Integer, List<Integer>> tree, int node, AtomicInteger order, Map<Integer, Integer> preOrderMap, Map<Integer, Integer> postOrderMap, Set<Integer> allNodes) {
+        preOrderMap.put(node, order.get());
         if (tree.containsKey(node)) {
             for (int child : tree.get(node)) {
-                postOrderMap.put(node, order.getAndIncrement());
-                calculatePrePostOrder(tree, child, order, preOrderMap, postOrderMap);
+                calculatePrePostOrder(tree, child, order, preOrderMap, postOrderMap, allNodes);
             }
         }
-
         postOrderMap.put(node, order.getAndIncrement());
+        allNodes.remove(node);
     }
 
     private void populateContentTable() throws SQLException {
@@ -499,169 +503,11 @@ public class Berechnung_XPath_Achsen {
         String insertAttribute =
                 "INSERT INTO attribute (pre, text) " +
                         "SELECT a.id, a.s_id " +
-                        "FROM accel a ";
+                        "FROM accel a " +
+                        "WHERE a.s_id IS NOT NULL";
 
         try (PreparedStatement pstmt = this.connection.prepareStatement(insertAttribute)) {
             pstmt.executeUpdate();
         }
     }
 }
-
-
-/*
-    private void calculatePrePostOrderNumbers() throws SQLException {
-        String getNodeQuery = "SELECT id, parent FROM accel";
-        Map<Integer, List<Integer>> tree = new HashMap<>();
-        Set<Integer> allNodes = new HashSet<>();
-        Set<Integer> childNodes = new HashSet<>();
-
-        try (Statement stmt = this.connection.createStatement();
-             ResultSet rs = stmt.executeQuery(getNodeQuery)) {
-
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                int parent = rs.getInt("parent");
-                allNodes.add(id);
-                if (parent != 0) {
-                    childNodes.add(id);
-                }
-                tree.computeIfAbsent(parent, k -> new ArrayList<>()).add(id);
-            }
-        }
-
-        allNodes.removeAll(childNodes);
-        Integer root = allNodes.isEmpty() ? null : allNodes.iterator().next();
-
-        if (root == null) {
-            throw new IllegalStateException("No root found");
-        }
-
-        for (List<Integer> children : tree.values()) {
-            children.sort(Comparator.naturalOrder());
-        }
-
-        // Check for cycles and remove them
-        Set<Integer> visited = new HashSet<>();
-        Set<Integer> recStack = new HashSet<>();
-
-        for (Integer node : tree.keySet()) {
-            if (isCyclic(tree, node, visited, recStack)) {
-                removeCycle(tree, node);
-                break;
-            }
-        }
-
-        Map<Integer, Integer> preOrderMap = new HashMap<>();
-        Map<Integer, Integer> postOrderMap = new HashMap<>();
-        AtomicInteger order = new AtomicInteger(1);
-
-        calculatePrePostOrder(tree, root, order, preOrderMap, postOrderMap, new HashSet<>());
-
-        try (PreparedStatement pstmt = this.connection.prepareStatement("UPDATE accel SET post = ? WHERE id = ?")) {
-            for (Map.Entry<Integer, Integer> entry : preOrderMap.entrySet()) {
-                pstmt.setInt(1, postOrderMap.get(entry.getKey()));
-                pstmt.setInt(2, entry.getKey());
-                pstmt.addBatch();
-            }
-            pstmt.executeBatch();
-        }
-    }
-
-    private static boolean isCyclic(Map<Integer, List<Integer>> tree, int node, Set<Integer> visited, Set<Integer> recStack) {
-        if (recStack.contains(node)) {
-            return true;
-        }
-        if (visited.contains(node)) {
-            return false;
-        }
-        visited.add(node);
-        recStack.add(node);
-        if (tree.containsKey(node)) {
-            for (Integer neighbor : tree.get(node)) {
-                if (isCyclic(tree, neighbor, visited, recStack)) {
-                    return true;
-                }
-            }
-        }
-        recStack.remove(node);
-        return false;
-    }
-
-    private static void removeCycle(Map<Integer, List<Integer>> tree, int node) {
-        // This method will remove cycles by breaking the first detected cycle.
-        Set<Integer> visited = new HashSet<>();
-        removeCycleHelper(tree, node, visited);
-    }
-
-    private static boolean removeCycleHelper(Map<Integer, List<Integer>> tree, int node, Set<Integer> visited) {
-        if (visited.contains(node)) {
-            return true;
-        }
-        visited.add(node);
-        if (tree.containsKey(node)) {
-            for (Iterator<Integer> iterator = tree.get(node).iterator(); iterator.hasNext(); ) {
-                Integer child = iterator.next();
-                if (removeCycleHelper(tree, child, visited)) {
-                    iterator.remove();
-                    return true;
-                }
-            }
-        }
-        visited.remove(node);
-        return false;
-    }
-
-    private static int calculatePrePostOrder(Map<Integer, List<Integer>> tree, int node, AtomicInteger order,
-                                             Map<Integer, Integer> preOrderMap, Map<Integer, Integer> postOrderMap, Set<Integer> visited) {
-        if (visited.contains(node)) {
-            throw new IllegalStateException("Cycle detected in the tree");
-        }
-        visited.add(node);
-
-        int preOrder = order.getAndIncrement();
-        preOrderMap.put(node, preOrder);
-
-        if (tree.containsKey(node)) {
-            for (int child : tree.get(node)) {
-                calculatePrePostOrder(tree, child, order, preOrderMap, postOrderMap, visited);
-            }
-        }
-
-        int postOrder = order.getAndIncrement();
-        postOrderMap.put(node, postOrder);
-
-        visited.remove(node);
-        return order.get();
-    }
-
-    private static int calculatePrePostOrder(Map<Integer, List<Integer>> tree, int node, AtomicInteger order, Map<Integer, Integer> preOrderMap, Map<Integer, Integer> postOrderMap) {
-        int preOrder = order.getAndIncrement();
-        preOrderMap.put(node, preOrder);
-
-        if (tree.containsKey(node)) {
-            for (int child : tree.get(node)) {
-                order.set(calculatePrePostOrder(tree, child, order, preOrderMap, postOrderMap));
-            }
-        }
-
-        int postOrder = order.getAndIncrement();
-        postOrderMap.put(node, postOrder);
-        return order.get();
-    }
-
-    private int calculatePostOrder(Map<Integer, List<Integer>> tree, Map<Integer, Integer> preOrderMap) {
-        Map<Integer, List<Integer>> sortedTree = new TreeMap<>(tree);
-
-        for (Map.Entry<Integer, List<Integer>> entry : sortedTree.entrySet()) {
-            Collections.sort(entry.getValue());
-        }
-        System.out.println(sortedTree.values());
-        System.out.println("Pre-order numbers calculated.");
-        return 0;
-    }
-
-    private int calculatePreOrder(Map<Integer, List<Integer>> tree, Map<Integer, Integer> preOrderMap) {
-
-        return 0;
-    }
-     */
