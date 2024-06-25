@@ -24,14 +24,22 @@ public class XPathSmallerWindow {
             statement.execute(
                     "CREATE OR REPLACE FUNCTION sw_following_siblings(v INT) " +
                             "RETURNS TABLE(following_sibling_id INT) AS $$ " +
-                            "DECLARE post_v INT; " +
+                            "DECLARE pre_v INT; " +
+                            "        post_v INT; " +
                             "        parent_v INT; " +
+                            "        height_v INT; " +
                             "BEGIN " +
-                            "SELECT post, parent INTO post_v, parent_v FROM accel WHERE id = v; " +
-                            "IF post_v IS NULL THEN " +
+                            "SELECT a.id, a.post, a.parent, h.height INTO pre_v, post_v, parent_v, height_v " +
+                            "FROM accel a " +
+                            "JOIN height h ON a.id = h.id " +
+                            "WHERE a.id = v; " +
+                            "IF pre_v IS NULL OR post_v IS NULL OR parent_v IS NULL OR height_v IS NULL THEN " +
                             "RETURN; END IF; " +
                             "RETURN QUERY " +
-                            "SELECT id FROM accel WHERE post > post_v AND parent = parent_v; " +
+                            "SELECT a.id " +
+                            "FROM accel a " +
+                            "JOIN height h ON a.id = h.id " +
+                            "WHERE a.post > post_v + height_v AND a.parent = parent_v; " +
                             "END; $$ LANGUAGE plpgsql;"
             );
         } catch (SQLException e) {
@@ -45,14 +53,22 @@ public class XPathSmallerWindow {
             statement.execute(
                     "CREATE OR REPLACE FUNCTION sw_preceding_siblings(v INT) " +
                             "RETURNS TABLE(preceding_sibling_id INT) AS $$ " +
-                            "DECLARE post_v INT; " +
+                            "DECLARE pre_v INT; " +
+                            "        post_v INT; " +
                             "        parent_v INT; " +
+                            "        height_v INT; " +
                             "BEGIN " +
-                            "SELECT post, parent INTO post_v, parent_v FROM accel WHERE id = v; " +
-                            "IF post_v IS NULL THEN " +
+                            "SELECT a.id, a.post, a.parent, h.height INTO pre_v, post_v, parent_v, height_v " +
+                            "FROM accel a " +
+                            "JOIN height h ON a.id = h.id " +
+                            "WHERE a.id = v; " +
+                            "IF pre_v IS NULL OR post_v IS NULL OR parent_v IS NULL OR height_v IS NULL THEN " +
                             "RETURN; END IF; " +
                             "RETURN QUERY " +
-                            "SELECT id FROM accel WHERE post < post_v AND parent = parent_v; " +
+                            "SELECT a.id " +
+                            "FROM accel a " +
+                            "JOIN height h ON a.id = h.id " +
+                            "WHERE a.post < post_v - height_v AND a.parent = parent_v; " +
                             "END; $$ LANGUAGE plpgsql;"
             );
         } catch (SQLException e) {
@@ -60,7 +76,7 @@ public class XPathSmallerWindow {
         }
     }
 
-    // Zum testen mit 50
+    // Zum testen mit 9
     private void createAncestorsSmallerWindow() {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute(
@@ -79,8 +95,8 @@ public class XPathSmallerWindow {
                             "RETURN QUERY " +
                             "SELECT a.id " +
                             "FROM accel a " +
-                            "WHERE a.id < pre_v AND a.post > post_v " +
-                            "AND a.post <= post_v + height_v; " +  // Smaller window by limiting post to post_v + height_v
+                            "JOIN height h ON a.id = h.id " +
+                            "WHERE a.id <= (pre_v - height_v) AND a.post >= (post_v + height_v); " +
                             "END; $$ LANGUAGE plpgsql;"
             );
         } catch (SQLException e) {

@@ -410,9 +410,9 @@ public class Berechnung_XPath_Achsen {
             statement.execute("CREATE TABLE IF NOT EXISTS accel (id INT PRIMARY KEY, post INT," +
                                             " s_id TEXT, parent INT, type TEXT)");
 
-            statement.execute("CREATE TABLE IF NOT EXISTS content (id INT PRIMARY KEY , text TEXT)");
+            statement.execute("CREATE TABLE IF NOT EXISTS content (id INT PRIMARY KEY, text TEXT)");
 
-            statement.execute("CREATE TABLE IF NOT EXISTS attribute (id INT PRIMARY KEY , text TEXT)");
+            statement.execute("CREATE TABLE IF NOT EXISTS attribute (id INT PRIMARY KEY, text TEXT)");
 
             statement.execute("CREATE TABLE IF NOT EXISTS height (id INT PRIMARY KEY, height INT)");
         } catch (SQLException e) {
