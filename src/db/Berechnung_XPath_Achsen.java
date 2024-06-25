@@ -228,6 +228,14 @@ public class Berechnung_XPath_Achsen {
                     if (line.contains("/ijcon/")) {
                         return true;
                     }
+                } else if (venues[i].toLowerCase().contains("tac")) {
+                    if (line.contains("/tac/")) {
+                        return true;
+                    }
+                } else if (venues[i].toLowerCase().contains("jossac")) {
+                    if (line.contains("/jossac/")) {
+                        return true;
+                    }
                 }
             }
         }

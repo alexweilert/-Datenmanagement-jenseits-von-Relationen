@@ -92,32 +92,32 @@ public class Berechnung_XPath_Achsen_Main {
     public static void benchmark(String[] args, Berechnung_XPath_Achsen bxpam) throws Exception {
         bxpam.openConnection();
         System.out.println("Preparing Benchmark.");
-        bxpam.preprocessXMLFile(args[0], "dblp/dblp.xml", "SIGMOD,VLDB,ICDE");
-        List<Publication> publications = bxpam.parseXMLFile("src/db/my_small_bib.xml");
-        Map<String, Map<String, List<Publication>>> transformedData = bxpam.transformData(publications);
-        bxpam.createTables();
-        bxpam.insertData(transformedData);
-        bxpam.populateSchema();
-        bxpam.calculateHeights();
-        EdgeModelFunctions emf = new EdgeModelFunctions(bxpam.connection);
-        emf.createFunctionXPathInEdgeModel();
-        XPathFunctions xpath = new XPathFunctions(bxpam.connection);
-        xpath.createFunctionXPath();
-        XPathSmallerWindow xPathSmallerWindow = new XPathSmallerWindow(bxpam.connection);
-        xPathSmallerWindow.createFunctionXPathSmallWindow();
+        //bxpam.preprocessXMLFile(args[0], "dblp/dblp.xml", "SIGMOD,VLDB,ICDE");
+        //List<Publication> publications = bxpam.parseXMLFile("src/db/my_small_bib.xml");
+        //Map<String, Map<String, List<Publication>>> transformedData = bxpam.transformData(publications);
+        //bxpam.createTables();
+        //bxpam.insertData(transformedData);
+        //bxpam.populateSchema();
+        //bxpam.calculateHeights();
+        //EdgeModelFunctions emf = new EdgeModelFunctions(bxpam.connection);
+        //emf.createFunctionXPathInEdgeModel();
+        //XPathFunctions xpath = new XPathFunctions(bxpam.connection);
+        //xpath.createFunctionXPath();
+        //XPathSmallerWindow xPathSmallerWindow = new XPathSmallerWindow(bxpam.connection);
+        //xPathSmallerWindow.createFunctionXPathSmallWindow();
         System.out.println("Benchmark prepared.");
         System.out.println("Starting Benchmark.");
         System.out.println("Benchmark On Edge Model");
-        benchmark_edge(bxpam);
+        //benchmark_edge(bxpam);
         System.out.println();
         System.out.println("Benchmark On XPath Model");
-        benchmark_xpath(bxpam);
+        //benchmark_xpath(bxpam);
         System.out.println();
         System.out.println("Benchmark On Smaller Window & One Axis Model");
-        benchmark_xpath_sw_axis(bxpam);
+        //benchmark_xpath_sw_axis(bxpam);
         System.out.println();
         System.out.println("Benchmark my_small_bib Erweiterung");
-        benchmark_my_small_bib(bxpam);
+        //benchmark_my_small_bib(args, bxpam);
     }
 
     public static void benchmark_edge(Berechnung_XPath_Achsen bxpam) throws SQLException {
@@ -148,7 +148,6 @@ public class Berechnung_XPath_Achsen_Main {
             endTime = System.currentTimeMillis();
             System.out.println("Ancestor Edge in: " + (endTime - startTime) + " ms");
             System.out.println("P: " + countparents + " C: " + countchilds);
-            System.out.println();
 
             countparents = 0;
             countchilds = 0;
@@ -164,7 +163,6 @@ public class Berechnung_XPath_Achsen_Main {
                             while (descendantRs.next()) {
                                 countchilds++;
                             }
-                            System.out.println();
                         }
                     }
                 }
@@ -172,7 +170,6 @@ public class Berechnung_XPath_Achsen_Main {
             endTime = System.currentTimeMillis();
             System.out.println("Descendant Edge in: " + (endTime - startTime) + " ms");
             System.out.println("P: " + countparents + " C: " + countchilds);
-            System.out.println();
 
             int count_precedent = 0;
             int count_following = 0;
@@ -203,7 +200,6 @@ public class Berechnung_XPath_Achsen_Main {
             endTime = System.currentTimeMillis();
             System.out.println("Following/Preceding Edge in: " + (endTime - startTime) + " ms");
             System.out.println("P: " + count_precedent + " F: " + count_following);
-            System.out.println();
 
 
             endTime = System.currentTimeMillis();
@@ -239,7 +235,6 @@ public class Berechnung_XPath_Achsen_Main {
             endTime = System.currentTimeMillis();
             System.out.println("Ancestor XPath in: " + (endTime - startTime) + " ms");
             System.out.println("P: " + countparents + " C: " + countchilds);
-            System.out.println();
 
             countparents = 0;
             countchilds = 0;
@@ -262,7 +257,6 @@ public class Berechnung_XPath_Achsen_Main {
             endTime = System.currentTimeMillis();
             System.out.println("Descendant XPath in: " + (endTime - startTime) + " ms");
             System.out.println("P: " + countparents + " C: " + countchilds);
-            System.out.println();
 
             int count_precedent = 0;
             int count_following = 0;
@@ -294,7 +288,6 @@ public class Berechnung_XPath_Achsen_Main {
             endTime = System.currentTimeMillis();
             System.out.println("Following/Preceding XPath in: " + (endTime - startTime) + " ms");
             System.out.println("P: " + count_precedent + " F: " + count_following);
-            System.out.println();
 
 
             endTime = System.currentTimeMillis();
@@ -331,7 +324,6 @@ public class Berechnung_XPath_Achsen_Main {
             endTime = System.currentTimeMillis();
             System.out.println("Ancestors SW in: " + (endTime - startTime) + " ms");
             System.out.println("P: " + countparents + " C: " + countchilds);
-            System.out.println();
 
             countparents = 0;
             countchilds = 0;
@@ -351,6 +343,18 @@ public class Berechnung_XPath_Achsen_Main {
                             }
                         }
                     }
+                }
+            }
+            endTime = System.currentTimeMillis();
+            System.out.println("Descendant SW in: " + (endTime - startTime) + " ms");
+            System.out.println("P: " + countparents + " C: " + countchilds);
+
+
+            rs = stmt.executeQuery("SELECT id FROM node WHERE type = 'v_year'");
+            while (rs.next()) {
+                boolean descending = rand.nextBoolean();
+                if (descending) {
+                    int yearId = rs.getInt("id");
                     try (PreparedStatement descendantStmt = connection.prepareStatement("SELECT * FROM one_axis_descending(?)")) {
                         descendantStmt.setInt(1, yearId);
                         try (ResultSet descendantRs = descendantStmt.executeQuery()) {
@@ -363,10 +367,8 @@ public class Berechnung_XPath_Achsen_Main {
                 }
             }
             endTime = System.currentTimeMillis();
-            System.out.println("Descendant SW&OneAxis in: " + (endTime - startTime) + " ms");
-            System.out.println("P: " + countparents + " C: " + countchilds);
-            System.out.println("AXIS_P " + count_axis_parents + " AXIS_C " + count_axis_children);
-            System.out.println();
+            System.out.println("Descendant OneAxis in: " + (endTime - startTime) + " ms");
+            System.out.println("A_P " + count_axis_parents + " A_C " + count_axis_children);
 
 
             int count_precedent = 0;
@@ -398,7 +400,7 @@ public class Berechnung_XPath_Achsen_Main {
             endTime = System.currentTimeMillis();
             System.out.println("Following/Preceding SW: " + (endTime - startTime) + " ms");
             System.out.println("P: " + count_precedent + " F: " + count_following);
-            System.out.println();
+
 
 
             endTime = System.currentTimeMillis();
@@ -406,11 +408,11 @@ public class Berechnung_XPath_Achsen_Main {
         }
     }
 
-    public static void benchmark_my_small_bib(Berechnung_XPath_Achsen bxpam) throws SQLException, ClassNotFoundException {
+    public static void benchmark_my_small_bib(String[] args, Berechnung_XPath_Achsen bxpam) throws SQLException, ClassNotFoundException {
         try {
             long startTime = System.nanoTime();
             String venues = "sigmod,vldb,icde";
-            bxpam.preprocessXMLFile("dblp/dblp.xml", "src/db/my_small_bib.xml", venues);
+            bxpam.preprocessXMLFile(args[0], "src/db/my_small_bib.xml", venues);
             Path xmlPath = Paths.get("src/db/my_small_bib.xml");
 
             long fileSize = Files.size(xmlPath);
@@ -423,8 +425,8 @@ public class Berechnung_XPath_Achsen_Main {
             System.out.println("----------------------------------------\n");
             long startTime1 = System.nanoTime();
 
-            String venues1 = "sigmod,vldb,icde,igarss,ijcon,vision";
-            bxpam.preprocessXMLFile("dblp/dblp.xml", "src/db/my_small_bib_processed1.xml", venues1);
+            String venues1 = "sigmod,vldb,icde,igarss,vision,imcl";
+            bxpam.preprocessXMLFile(args[0], "src/db/my_small_bib_processed1.xml", venues1);
             Path xmlPath1 = Paths.get("src/db/my_small_bib_processed1.xml");
             long fileSize1 = Files.size(xmlPath1);
             System.out.println("my_small.bib_processed-Dateigröße: " + fileSize1 + " Bytes");
@@ -437,8 +439,8 @@ public class Berechnung_XPath_Achsen_Main {
             System.out.println("----------------------------------------\n");
             long startTime2 = System.nanoTime();
 
-            String venues2 = "sigmod,vldb,icde,igarss,ijcon,vision,imcl,meco,IEEEants";
-            bxpam.preprocessXMLFile("dblp/dblp.xml", "src/db/my_small_bib_processed2.xml", venues2);
+            String venues2 = "sigmod,vldb,icde,igarss,ijcon,vision,imcl,meco,IEEEants,tac,jossac";
+            bxpam.preprocessXMLFile(args[0], "src/db/my_small_bib_processed2.xml", venues2);
 
             Path xmlPath2 = Paths.get("src/db/my_small_bib_processed2.xml");
             long fileSize2 = Files.size(xmlPath2);
