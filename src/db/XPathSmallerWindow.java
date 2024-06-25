@@ -16,6 +16,7 @@ public class XPathSmallerWindow {
         createDescendantsSmallerWindow();
         createFollowingSiblingsSmallerWindow();
         createPrecedingSiblingsSmallerWindow();
+        createDescendingOnOneAxis();
     }
 
     // zum testen mit 36 & 49
@@ -125,8 +126,7 @@ public class XPathSmallerWindow {
                             "SELECT id FROM accel WHERE parent = v " +
                             "UNION ALL " +
                             "SELECT a.id FROM accel a, descendant " +
-                            "WHERE a.parent = descendant.id AND a.id <= post_v + height_v " +
-                            ") " +
+                            "WHERE a.parent = descendant.id AND a.id <= post_v + height_v ) " +
                             "SELECT descendant.id FROM descendant; " +
                             "END; $$ LANGUAGE plpgsql;"
             );
@@ -134,5 +134,33 @@ public class XPathSmallerWindow {
             throw new RuntimeException(e);
         }
     }
+
+    // Zum Testen mit 35
+    private void createDescendingOnOneAxis() {
+        try (Statement statement = this.connection.createStatement()) {
+            statement.execute(
+                    "CREATE OR REPLACE FUNCTION one_axis_descending(v INT) " +
+                            "RETURNS TABLE(descendant_id INT) AS $$ " +
+                            "DECLARE pre_v INT; " +
+                            "        post_v INT; " +
+                            "BEGIN " +
+                            "SELECT a.id, a.post INTO pre_v, post_v " +
+                            "FROM accel a " +
+                            "WHERE a.id = v; " +
+                            "IF pre_v IS NULL OR post_v IS NULL THEN " +
+                            "RETURN; END IF; " +
+                            "RETURN QUERY " +
+                            "SELECT a.id " +
+                            "FROM accel a " +
+                            "WHERE ( pre_v < a.id AND a.id < post_v ) " +
+                            "   OR ( pre_v < a.post AND a.post < post_v ); " +
+                            "END; $$ LANGUAGE plpgsql;"
+            );
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 
 }

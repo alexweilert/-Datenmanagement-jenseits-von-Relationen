@@ -28,8 +28,8 @@ public class XPathFunctions {
                     "BEGIN " +
                     "SELECT post, parent INTO post_v, parent_v FROM accel WHERE id = v; " +
                     "IF post_v IS NULL THEN " +
-                    "RETURN; END IF; " +
-                    "SELECT id FROM accel WHERE id = v AND post > post_v AND parent = parent_v; " +
+                    "RETURN; END IF; RETURN QUERY " +
+                    "SELECT id FROM accel WHERE id > v AND post > post_v AND parent = parent_v; " +
                     "END; $$ LANGUAGE plpgsql;"
             );
         } catch (SQLException e) {

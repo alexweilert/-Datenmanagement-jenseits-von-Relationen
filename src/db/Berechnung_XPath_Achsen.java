@@ -44,8 +44,6 @@ public class Berechnung_XPath_Achsen {
         boolean isInsidePublication = true;
         String line = reader.readLine();
         boolean initial = false;
-        int icde = 0, vldb = 0, sigmod = 0;
-
         String publication = "";
 
         while (line != null) {
@@ -82,17 +80,6 @@ public class Berechnung_XPath_Achsen {
                         if(isArticel(line) || isBeginofArticle(line)) {
                             publication = line;
                         }
-                        if( ( line.contains("editor") || line.contains("author")) && ( line.contains("Nikolaus Augsten") || line.contains("Augsten Nikolaus") )) {
-                            if(publication.contains("conf/icde/")){
-                                icde++;
-                            }
-                            if(publication.contains("conf/vldb/") || publication.contains("journals/pvldb/")){
-                                vldb++;
-                            }
-                            if(publication.contains("conf/sigmod") || publication.contains("journals/pacmmod/")){
-                                sigmod++;
-                            }
-                        }
                         if( isArticel(line) || isEndOFArticle(line)) {
 
                             isInsidePublication = true;
@@ -106,7 +93,6 @@ public class Berechnung_XPath_Achsen {
             } else line = reader.readLine();
 
         }
-        System.out.println("ICDE: " + icde + ", VLDB: " + vldb + ", SIGMOD: " + sigmod);
         writer.write("</bib>");
         reader.close();
         writer.close();
@@ -205,19 +191,41 @@ public class Berechnung_XPath_Achsen {
                 if (venues[i].toLowerCase().equals("sigmod")) {
                     if (line.contains("journals/pacmmod/")) {
                         return true;
-                    }
-                    if (line.contains("conf/sigmod/")) {
+                    } else if (line.contains("conf/sigmod/")) {
                         return true;
                     }
                 } else if (venues[i].toLowerCase().contains("vldb")) {
                     if (line.contains("journals/pvldb/")) {
                         return true;
-                    }
-                    if (line.contains("conf/vldb/")) {
+                    } else if (line.contains("conf/vldb/")) {
                         return true;
                     }
                 } else if (venues[i].toLowerCase().contains("icde")) {
                     if (line.contains("conf/icde/")) {
+                        return true;
+                    }
+                } else if (venues[i].toLowerCase().contains("igarss")) {
+                    if (line.contains("/igarss/")) {
+                        return true;
+                    }
+                } else if (venues[i].toLowerCase().contains("vision")) {
+                    if (line.contains("/vision/")) {
+                        return true;
+                    }
+                } else if (venues[i].toLowerCase().contains("imcl")) {
+                    if (line.contains("/imcl/")) {
+                        return true;
+                    }
+                } else if (venues[i].toLowerCase().contains("meco")) {
+                    if (line.contains("/meco/")) {
+                        return true;
+                    }
+                } else if (venues[i].toLowerCase().contains("IEEEants")) {
+                    if (line.contains("/IEEEants/")) {
+                        return true;
+                    }
+                } else if (venues[i].toLowerCase().contains("ijcon")) {
+                    if (line.contains("/ijcon/")) {
                         return true;
                     }
                 }
