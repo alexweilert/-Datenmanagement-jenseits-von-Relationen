@@ -410,11 +410,11 @@ public class Berechnung_XPath_Achsen {
             statement.execute("CREATE TABLE IF NOT EXISTS accel (id INT PRIMARY KEY, post INT," +
                                             " s_id TEXT, parent INT, type TEXT)");
 
-            statement.execute("CREATE TABLE IF NOT EXISTS content (pre INT PRIMARY KEY , text TEXT)");
+            statement.execute("CREATE TABLE IF NOT EXISTS content (id INT PRIMARY KEY , text TEXT)");
 
-            statement.execute("CREATE TABLE IF NOT EXISTS attribute (pre INT PRIMARY KEY , text TEXT)");
+            statement.execute("CREATE TABLE IF NOT EXISTS attribute (id INT PRIMARY KEY , text TEXT)");
 
-            statement.execute("CREATE TABLE IF NOT EXISTS height (pre INT PRIMARY KEY, height INT)");
+            statement.execute("CREATE TABLE IF NOT EXISTS height (id INT PRIMARY KEY, height INT)");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -486,7 +486,7 @@ public class Berechnung_XPath_Achsen {
 
     private void populateContentTable() throws SQLException {
         String insertContent =
-                "INSERT INTO content (pre, text) " +
+                "INSERT INTO content (id, text) " +
                         "SELECT a.id, a.type " +
                         "FROM accel a ";
 
@@ -497,7 +497,7 @@ public class Berechnung_XPath_Achsen {
 
     private void populateAttributeTable() throws SQLException {
         String insertAttribute =
-                "INSERT INTO attribute (pre, text) " +
+                "INSERT INTO attribute (id, text) " +
                         "SELECT a.id, a.s_id " +
                         "FROM accel a " +
                         "WHERE a.s_id IS NOT NULL";
@@ -542,7 +542,7 @@ public class Berechnung_XPath_Achsen {
         }
 
         // Werte in die Tabelle "height" einfügen
-        String insertQuery = "INSERT INTO height (pre, height) VALUES (?, ?)";
+        String insertQuery = "INSERT INTO height (id, height) VALUES (?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(insertQuery)) {
             for (Integer nodeId : heightMap.keySet()) {
                 pstmt.setInt(1, nodeId);

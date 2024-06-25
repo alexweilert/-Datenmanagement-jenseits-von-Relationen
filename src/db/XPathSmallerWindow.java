@@ -16,14 +16,13 @@ public class XPathSmallerWindow {
         createDescendantsSmallerWindow();
         createFollowingSiblingsSmallerWindow();
         createPrecedingSiblingsSmallerWindow();
-        createSmWinDescendants();
-        createOptimizedDescendants();
     }
 
+    // zum testen mit 36 & 49
     private void createFollowingSiblingsSmallerWindow() {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute(
-                    "CREATE OR REPLACE FUNCTION smwin_fol_siblings(v INT) " +
+                    "CREATE OR REPLACE FUNCTION sw_following_siblings(v INT) " +
                             "RETURNS TABLE(following_sibling_id INT) AS $$ " +
                             "DECLARE post_v INT; " +
                             "        parent_v INT; " +
@@ -32,7 +31,7 @@ public class XPathSmallerWindow {
                             "IF post_v IS NULL THEN " +
                             "RETURN; END IF; " +
                             "RETURN QUERY " +
-                            "SELECT id AS following_sibling_id FROM accel WHERE id > v AND parent = parent_v AND id <= post_v; " +
+                            "SELECT id FROM accel WHERE post > post_v AND parent = parent_v; " +
                             "END; $$ LANGUAGE plpgsql;"
             );
         } catch (SQLException e) {
@@ -40,10 +39,11 @@ public class XPathSmallerWindow {
         }
     }
 
+    // zum testen mit 36 & 49
     private void createPrecedingSiblingsSmallerWindow() {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute(
-                    "CREATE OR REPLACE FUNCTION smwin_prec_siblings(v INT) " +
+                    "CREATE OR REPLACE FUNCTION sw_preceding_siblings(v INT) " +
                             "RETURNS TABLE(preceding_sibling_id INT) AS $$ " +
                             "DECLARE post_v INT; " +
                             "        parent_v INT; " +
@@ -52,7 +52,7 @@ public class XPathSmallerWindow {
                             "IF post_v IS NULL THEN " +
                             "RETURN; END IF; " +
                             "RETURN QUERY " +
-                            "SELECT id AS preceding_sibling_id FROM accel WHERE id < v AND parent = parent_v AND post >= post_v; " +
+                            "SELECT id FROM accel WHERE post < post_v AND parent = parent_v; " +
                             "END; $$ LANGUAGE plpgsql;"
             );
         } catch (SQLException e) {
@@ -60,19 +60,27 @@ public class XPathSmallerWindow {
         }
     }
 
+    // Zum testen mit 50
     private void createAncestorsSmallerWindow() {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute(
-                    "CREATE OR REPLACE FUNCTION smwin_ancestors(v INT) " +
+                    "CREATE OR REPLACE FUNCTION sw_ascending(v INT) " +
                             "RETURNS TABLE(ancestor_id INT) AS $$ " +
-                            "DECLARE post_v INT; " +
                             "DECLARE pre_v INT; " +
+                            "        post_v INT; " +
+                            "        height_v INT; " +
                             "BEGIN " +
-                            "SELECT id, post INTO pre_v, post_v FROM accel WHERE id = v; " +
-                            "IF post_v IS NULL THEN " +
+                            "SELECT a.id, a.post, h.height INTO pre_v, post_v, height_v " +
+                            "FROM accel a " +
+                            "JOIN height h ON a.id = h.id " +
+                            "WHERE a.id = v; " +
+                            "IF pre_v IS NULL OR post_v IS NULL OR height_v IS NULL THEN " +
                             "RETURN; END IF; " +
                             "RETURN QUERY " +
-                            "SELECT id AS ancestor_id FROM accel WHERE id < pre_v AND post > post_v; " +
+                            "SELECT a.id " +
+                            "FROM accel a " +
+                            "WHERE a.id < pre_v AND a.post > post_v " +
+                            "AND a.post <= post_v + height_v; " +  // Smaller window by limiting post to post_v + height_v
                             "END; $$ LANGUAGE plpgsql;"
             );
         } catch (SQLException e) {
@@ -80,62 +88,30 @@ public class XPathSmallerWindow {
         }
     }
 
+    // Zum Testen mit 35
     private void createDescendantsSmallerWindow() {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute(
-                    "CREATE OR REPLACE FUNCTION smwin_descendants(v INT) " +
+                    "CREATE OR REPLACE FUNCTION sw_descending(v INT) " +
                             "RETURNS TABLE(descendant_id INT) AS $$ " +
-                            "DECLARE post_v INT; " +
                             "DECLARE pre_v INT; " +
+                            "        post_v INT; " +
+                            "        height_v INT; " +
                             "BEGIN " +
-                            "   SELECT id, post INTO pre_v, post_v FROM accel WHERE id = v; " +
-                            "   IF post_v IS NULL THEN " +
-                            "   RETURN; END IF; " +
-                            "   RETURN QUERY " +
-                            "   SELECT id AS descendant_id FROM accel WHERE id > pre_v AND post <= post_v AND id <= post_v; " +
-                            "END; $$ LANGUAGE plpgsql;"
-            );
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void createSmWinDescendants() {
-        try (Statement statement = this.connection.createStatement()) {
-            statement.execute(
-                    "CREATE OR REPLACE FUNCTION smwin_descendants_v2(v INT) " +
-                            "RETURNS TABLE(descendant_id INT) AS $$ " +
-                            "DECLARE post_v INT; " +
-                            "DECLARE pre_v INT; " +
-                            "BEGIN " +
-                            "   SELECT id, post INTO pre_v, post_v FROM accel WHERE id = v; " +
-                            "   IF post_v IS NULL THEN " +
-                            "   RETURN; END IF; " +
-                            "   RETURN QUERY " +
-                            "   SELECT id AS descendant_id FROM accel WHERE id > pre_v AND post <= post_v AND id <= (pre_v + post_v)/2; " +
-                            "END; $$ LANGUAGE plpgsql;"
-            );
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void createOptimizedDescendants() {
-        try (Statement statement = this.connection.createStatement()) {
-            statement.execute(
-                    "CREATE OR REPLACE FUNCTION xp_optimized_descendants(v INT) " +
-                            "RETURNS TABLE(descendant_id INT) AS $$ " +
-                            "DECLARE " +
-                            "    pre_v INT; " +
-                            "    post_v INT; " +
-                            "BEGIN " +
-                            "    SELECT id, post INTO pre_v, post_v FROM accel WHERE id = v; " +
-                            "    IF post_v IS NULL THEN " +
-                            "        RETURN; " +
-                            "    END IF; " +
-                            "    RETURN QUERY " +
-                            "    SELECT id AS descendant_id FROM accel " +
-                            "    WHERE id > pre_v AND post <= post_v; " +
+                            "SELECT a.id, a.post, h.height INTO pre_v, post_v, height_v " +
+                            "FROM accel a " +
+                            "JOIN height h ON a.id = h.id " +
+                            "WHERE a.id = v; " +
+                            "IF pre_v IS NULL OR post_v IS NULL OR height_v IS NULL THEN " +
+                            "RETURN; END IF; " +
+                            "RETURN QUERY " +
+                            "WITH RECURSIVE descendant(id) AS ( " +
+                            "SELECT id FROM accel WHERE parent = v " +
+                            "UNION ALL " +
+                            "SELECT a.id FROM accel a, descendant " +
+                            "WHERE a.parent = descendant.id AND a.id <= post_v + height_v " +
+                            ") " +
+                            "SELECT descendant.id FROM descendant; " +
                             "END; $$ LANGUAGE plpgsql;"
             );
         } catch (SQLException e) {
