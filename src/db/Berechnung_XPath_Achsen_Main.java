@@ -33,6 +33,8 @@ public class Berechnung_XPath_Achsen_Main {
 
             bxpam.populateSchema();
 
+            bxpam.calculateHeights();
+
             EdgeModelFunctions emf = new EdgeModelFunctions(bxpam.connection);
             emf.createFunctionXPathInEdgeModel();
 

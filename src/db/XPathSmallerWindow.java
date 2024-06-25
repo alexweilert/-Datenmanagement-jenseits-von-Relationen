@@ -17,6 +17,7 @@ public class XPathSmallerWindow {
         createFollowingSiblingsSmallerWindow();
         createPrecedingSiblingsSmallerWindow();
         createSmWinDescendants();
+        createOptimizedDescendants();
     }
 
     private void createFollowingSiblingsSmallerWindow() {
@@ -102,7 +103,7 @@ public class XPathSmallerWindow {
     private void createSmWinDescendants() {
         try (Statement statement = this.connection.createStatement()) {
             statement.execute(
-                    "CREATE OR REPLACE FUNCTION smwin_descendants(v INT) " +
+                    "CREATE OR REPLACE FUNCTION smwin_descendants_v2(v INT) " +
                             "RETURNS TABLE(descendant_id INT) AS $$ " +
                             "DECLARE post_v INT; " +
                             "DECLARE pre_v INT; " +
@@ -118,4 +119,28 @@ public class XPathSmallerWindow {
             throw new RuntimeException(e);
         }
     }
+
+    private void createOptimizedDescendants() {
+        try (Statement statement = this.connection.createStatement()) {
+            statement.execute(
+                    "CREATE OR REPLACE FUNCTION xp_optimized_descendants(v INT) " +
+                            "RETURNS TABLE(descendant_id INT) AS $$ " +
+                            "DECLARE " +
+                            "    pre_v INT; " +
+                            "    post_v INT; " +
+                            "BEGIN " +
+                            "    SELECT id, post INTO pre_v, post_v FROM accel WHERE id = v; " +
+                            "    IF post_v IS NULL THEN " +
+                            "        RETURN; " +
+                            "    END IF; " +
+                            "    RETURN QUERY " +
+                            "    SELECT id AS descendant_id FROM accel " +
+                            "    WHERE id > pre_v AND post <= post_v; " +
+                            "END; $$ LANGUAGE plpgsql;"
+            );
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

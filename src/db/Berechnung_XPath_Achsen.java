@@ -401,7 +401,7 @@ public class Berechnung_XPath_Achsen {
         try (Statement statement = this.connection.createStatement()) {
 
             statement.execute("DROP INDEX IF EXISTS idx_accel_parent, idx_accel_pre, idx_edge_parents, idx_edge_childs");
-            statement.execute("DROP TABLE IF EXISTS node, edge, accel, content, attribute");
+            statement.execute("DROP TABLE IF EXISTS node, edge, accel, content, attribute, height");
 
             statement.execute("CREATE TABLE IF NOT EXISTS node (id int ,s_id TEXT, type TEXT, content TEXT)");
 
@@ -414,11 +414,7 @@ public class Berechnung_XPath_Achsen {
 
             statement.execute("CREATE TABLE IF NOT EXISTS attribute (pre INT PRIMARY KEY , text TEXT)");
 
-            statement.execute("CREATE INDEX idx_accel_pre ON accel(id)");
-            statement.execute("CREATE INDEX idx_accel_parent ON accel(parent)");
-            statement.execute("CREATE INDEX idx_edge_parents ON edge(parents)");
-            statement.execute("CREATE INDEX idx_edge_childs ON edge(childs)");
-
+            statement.execute("CREATE TABLE IF NOT EXISTS height (pre INT PRIMARY KEY, height INT)");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -509,5 +505,75 @@ public class Berechnung_XPath_Achsen {
         try (PreparedStatement pstmt = this.connection.prepareStatement(insertAttribute)) {
             pstmt.executeUpdate();
         }
+    }
+
+    public void calculateHeights() throws SQLException {
+        String getNodeQuery = "SELECT id, parent FROM accel";
+        Map<Integer, List<Integer>> tree = new HashMap<>();
+        Set<Integer> allNodes = new HashSet<>();
+        Integer root = null;
+
+        // Abrufen der Knoten und Strukturierung des Baumes
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(getNodeQuery)) {
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                int parent = rs.getInt("parent");
+                allNodes.add(id);
+                if (parent == 0 && root == null) {
+                    root = id;
+                } else {
+                    tree.computeIfAbsent(parent, k -> new ArrayList<>()).add(id);
+                }
+            }
+        }
+
+        if (root == null) {
+            throw new IllegalStateException("Root node not found");
+        }
+
+        // Dictionary zur Speicherung der Höhen
+        Map<Integer, Integer> heightMap = new HashMap<>();
+
+        // Höhenberechnung für alle Knoten
+        for (Integer nodeId : allNodes) {
+            calculateHeight(nodeId, tree, heightMap);
+        }
+
+        // Werte in die Tabelle "height" einfügen
+        String insertQuery = "INSERT INTO height (pre, height) VALUES (?, ?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(insertQuery)) {
+            for (Integer nodeId : heightMap.keySet()) {
+                pstmt.setInt(1, nodeId);
+                pstmt.setInt(2, heightMap.get(nodeId));
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+        }
+    }
+
+    private int calculateHeight(Integer nodeId, Map<Integer, List<Integer>> tree, Map<Integer, Integer> heightMap) {
+        if (heightMap.containsKey(nodeId)) {
+            return heightMap.get(nodeId);
+        }
+
+        Integer parentId = getParentId(nodeId, tree);
+        if (parentId == null) {
+            heightMap.put(nodeId, 0);
+        } else {
+            int parentHeight = calculateHeight(parentId, tree, heightMap);
+            heightMap.put(nodeId, parentHeight + 1);
+        }
+        return heightMap.get(nodeId);
+    }
+
+    private Integer getParentId(Integer nodeId, Map<Integer, List<Integer>> tree) {
+        for (Map.Entry<Integer, List<Integer>> entry : tree.entrySet()) {
+            if (entry.getValue().contains(nodeId)) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 }
